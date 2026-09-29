@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Conseiller Culinaire — {{ app_name|default:"Le Gout" }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  
+  <div class="border-b border-[#E5DCD0] pb-4 mb-6 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="{% static 'images/logo.jpg' %}" alt="Logo Le Gout" class="w-12 h-12 rounded-xl object-contain bg-white p-0.5 border border-[#E5DCD0] shadow-sm flex-shrink-0">
+      <div>
+        <h1 class="font-serif text-2xl font-bold text-[#221C18]">Conseiller Culinaire</h1>
+        <p class="text-xs text-[#274D36] font-semibold flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-[#274D36] animate-pulse"></span>
+          Votre Guide Culinaire & Terroir Le Gout (En direct)
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Box Container -->
+  <div class="resto-card bg-[#FFFFFF] overflow-hidden flex flex-col h-[560px] border border-[#E5DCD0]">
+    
+    <!-- Messages Scroll Area -->
+    <div id="chat-messages" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#FAF6F0]">
+      
+      <!-- Welcome Message -->
+      <div class="flex items-start gap-3">
+        <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-8 h-8 rounded-full object-contain bg-white p-0.5 border border-[#E5DCD0] flex-shrink-0">
+        <div class="max-w-xl bg-[#FFFFFF] border border-[#E5DCD0] p-4 rounded-lg rounded-tl-none text-xs text-[#221C18] leading-relaxed shadow-sm">
+          <p>
+            <strong>Bonjour et bienvenue chez Le Gout !</strong> Je suis votre conseiller culinaire virtuel.
+          </p>
+          <p class="mt-2">
+            Dis-moi ce qui te ferait plaisir aujourd'hui : un bon <strong>Ndolè royal</strong> aux crevettes côtières, une <strong>carpe braisée</strong> au poivre de Penja, un <strong>Koki</strong> fumant dans la feuille de bananier, ou des <strong>brochettes de soya</strong> au kankan ?
+          </p>
+          <p class="mt-2 text-[#4A3E36]">
+            Tu peux aussi me donner le numéro de ta commande (ex: <em>RG-260927-4812</em>) pour que je te dise exactement où en est le livreur !
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Quick Suggestion Chips -->
+    <div class="p-3 bg-[#FFFFFF] border-t border-[#E5DCD0] overflow-x-auto flex items-center gap-2 text-xs scrollbar-none">
+      <span class="text-[#4A3E36] text-xs whitespace-nowrap font-semibold">Idées rapides :</span>
+      <button onclick="sendQuickPrompt('Où trouver le meilleur Ndolè à Akwa ?')" 
+              class="whitespace-nowrap px-2.5 py-1 rounded bg-[#FAF6F0] hover:bg-[#F4ECE1] border border-[#E5DCD0] text-[#221C18] text-xs">
+        Meilleur Ndolè à Douala
+      </button>
+      <button onclick="sendQuickPrompt('Un poisson braisé au feu de bois')" 
+              class="whitespace-nowrap px-2.5 py-1 rounded bg-[#FAF6F0] hover:bg-[#F4ECE1] border border-[#E5DCD0] text-[#221C18] text-xs">
+        Poisson braisé au feu de bois
+      </button>
+      <button onclick="sendQuickPrompt('Un plat sans piment pour les enfants')" 
+              class="whitespace-nowrap px-2.5 py-1 rounded bg-[#FAF6F0] hover:bg-[#F4ECE1] border border-[#E5DCD0] text-[#221C18] text-xs">
+        Plats doux sans piment
+      </button>
+      <button onclick="sendQuickPrompt('Des plats économiques à moins de 3 000 FCFA')" 
+              class="whitespace-nowrap px-2.5 py-1 rounded bg-[#FAF6F0] hover:bg-[#F4ECE1] border border-[#E5DCD0] text-[#221C18] text-xs">
+        Plats &lt; 3 000 FCFA
+      </button>
+      <button onclick="sendQuickPrompt('Où est ma commande ?')" 
+              class="whitespace-nowrap px-2.5 py-1 rounded bg-[#FAF6F0] hover:bg-[#F4ECE1] border border-[#E5DCD0] text-[#A83B19] font-semibold text-xs">
+        Suivre ma commande
+      </button>
+    </div>
+
+    <!-- Input Form -->
+    <div class="p-3 sm:p-4 bg-[#FFFFFF] border-t border-[#E5DCD0]">
+      <form id="chat-form" onsubmit="handleChatSubmit(event)" class="flex items-center gap-3">
+        <input type="text" id="chat-input" placeholder="Posez votre question culinaire..." required
+               class="flex-1 bg-[#FAF6F0] border border-[#C9BBA9] rounded-md px-4 py-2.5 text-xs text-[#221C18] focus:outline-none focus:border-[#A83B19]">
+        <button type="submit" class="btn-terracotta text-xs py-2.5 px-5 font-semibold">
+          Envoyer
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function sendQuickPrompt(promptText) {
+  document.getElementById('chat-input').value = promptText;
+  document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+}
+
+function handleChatSubmit(e) {
+  e.preventDefault();
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  if (!message) return;
+
+  const messagesContainer = document.getElementById('chat-messages');
+
+  // Add User Message Bubble
+  const userBubble = document.createElement('div');
+  userBubble.className = 'flex items-start justify-end gap-3';
+  userBubble.innerHTML = `
+    <div class="max-w-xl bg-[#241E1A] text-[#FAF6F0] p-3.5 rounded-lg rounded-tr-none text-xs leading-relaxed">
+      ${escapeHtml(message)}
+    </div>
+    <div class="w-8 h-8 rounded-full bg-[#38302A] text-[#FAF6F0] text-xs font-bold flex items-center justify-center flex-shrink-0">
+      Moi
+    </div>
+  `;
+  messagesContainer.appendChild(userBubble);
+  input.value = '';
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  // Add Typing Indicator
+  const typingIndicator = document.createElement('div');
+  typingIndicator.id = 'typing-indicator';
+  typingIndicator.className = 'flex items-start gap-3';
+  typingIndicator.innerHTML = `
+    <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-8 h-8 rounded-full object-contain bg-white p-0.5 border border-[#E5DCD0] flex-shrink-0">
+    <div class="bg-[#FFFFFF] border border-[#E5DCD0] p-3 rounded-lg text-xs text-[#4A3E36] italic">
+      Recherche en cuisine...
+    </div>
+  `;
+  messagesContainer.appendChild(typingIndicator);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  // Call Chat API
+  fetch("{% url 'chatbot:api_message' %}", {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message: message })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const indicator = document.getElementById('typing-indicator');
+    if (indicator) indicator.remove();
+
+    let linkHtml = '';
+    if (data.link && data.link_text) {
+      linkHtml = `<div class="mt-3 pt-2 border-t border-[#E5DCD0]">
+        <a href="${data.link}" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#A83B19] hover:underline">
+          ${data.link_text} &rarr;
+        </a>
+      </div>`;
+    }
+
+    const assistantBubble = document.createElement('div');
+    assistantBubble.className = 'flex items-start gap-3';
+    assistantBubble.innerHTML = `
+      <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-8 h-8 rounded-full object-contain bg-white p-0.5 border border-[#E5DCD0] flex-shrink-0">
+      <div class="max-w-xl bg-[#FFFFFF] border border-[#E5DCD0] p-4 rounded-lg rounded-tl-none text-xs text-[#221C18] leading-relaxed shadow-sm">
+        ${data.reply}
+        ${linkHtml}
+      </div>
+    `;
+    messagesContainer.appendChild(assistantBubble);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  })
+  .catch(err => {
+    const indicator = document.getElementById('typing-indicator');
+    if (indicator) indicator.remove();
+  });
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.innerText = text;
+  return div.innerHTML;
+}
+</script>
+{% endblock %}

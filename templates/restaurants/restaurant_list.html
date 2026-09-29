@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load resto_tags %}
+
+{% block title %}Nos Tables & Menus — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  
+  <!-- Header & Filters -->
+  <div class="border-b border-[#E5DCD0] pb-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="font-serif text-3xl font-bold text-[#221C18]">
+          Restaurants & Maquis Partenaires
+        </h1>
+        <p class="text-xs text-[#6B6156] mt-1">
+          {% if search_query %}
+            Résultats pour la recherche : "<strong class="text-[#221C18]">{{ search_query }}</strong>"
+          {% elif current_category %}
+            Spécialité : <strong class="text-[#221C18]">{{ current_category.name }}</strong>
+          {% else %}
+            Les meilleurs cordons-bleus et maîtres braiseurs de {{ current_city }}
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Price filter -->
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-[#6B6156]">Budget :</span>
+        <a href="?city={{ current_city }}{% if current_category %}&category={{ current_category.slug }}{% endif %}" 
+           class="px-2.5 py-1 rounded border {% if not selected_price %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18]{% endif %}">
+          Tous
+        </a>
+        <a href="?city={{ current_city }}&price=${% if current_category %}&category={{ current_category.slug }}{% endif %}" 
+           class="px-2.5 py-1 rounded border {% if selected_price == '$' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18]{% endif %}">
+          $ Éco (&lt; 2000 F)
+        </a>
+        <a href="?city={{ current_city }}&price=$${% if current_category %}&category={{ current_category.slug }}{% endif %}" 
+           class="px-2.5 py-1 rounded border {% if selected_price == '$$' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18]{% endif %}">
+          $$ Moyen
+        </a>
+        <a href="?city={{ current_city }}&price=$$${% if current_category %}&category={{ current_category.slug }}{% endif %}" 
+           class="px-2.5 py-1 rounded border {% if selected_price == '$$$' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18]{% endif %}">
+          $$$ Prestige
+        </a>
+      </div>
+    </div>
+
+    <!-- Category filter chips -->
+    <div class="flex items-center gap-2 overflow-x-auto pt-6 pb-2 text-xs scrollbar-none">
+      <a href="{% url 'restaurants:list' %}?city={{ current_city }}" 
+         class="whitespace-nowrap px-3 py-1.5 rounded-full border {% if not current_category %}bg-[#A83B19] text-[#FFFFFF] border-[#842A0D]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0] hover:bg-[#FAF6F0]{% endif %}">
+        Toutes les spécialités
+      </a>
+      {% for cat in categories %}
+        <a href="{% url 'restaurants:list' %}?category={{ cat.slug }}&city={{ current_city }}" 
+           class="whitespace-nowrap px-3 py-1.5 rounded-full border {% if current_category and current_category.slug == cat.slug %}bg-[#A83B19] text-[#FFFFFF] border-[#842A0D]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0] hover:bg-[#FAF6F0]{% endif %}">
+          {{ cat.name }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Restaurant List Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for resto in restaurants %}
+      <article class="resto-card overflow-hidden flex flex-col justify-between">
+        <div>
+          <!-- Banner -->
+          <div class="relative h-48 bg-[#E5DCD0]">
+            <img src="{{ resto.cover_image }}" alt="{{ resto.name }}" class="w-full h-full object-cover">
+            <div class="absolute top-3 left-3 bg-[#241E1A] text-[#FAF6F0] text-[11px] font-bold px-2 py-1 rounded">
+              {{ resto.neighborhood }}, {{ resto.city }}
+            </div>
+            <div class="absolute top-3 right-3 bg-[#FFFFFF] border border-[#C9BBA9] text-[#221C18] text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+              <span class="text-[#C27A23] inline-flex items-center">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              </span>
+              <span>{{ resto.rating }}</span>
+              <span class="text-[10px] text-[#6B6156]">({{ resto.total_reviews }})</span>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="p-5">
+            <h2 class="font-serif font-bold text-lg text-[#221C18] leading-snug">
+              <a href="{% url 'restaurants:detail' resto.slug %}" class="hover:text-[#A83B19] transition-colors">
+                {{ resto.name }}
+              </a>
+            </h2>
+            <p class="text-xs text-[#A83B19] font-medium mt-1">{{ resto.tagline }}</p>
+            <p class="text-xs text-[#6B6156] mt-2 line-clamp-3 leading-relaxed">
+              {{ resto.description }}
+            </p>
+
+            <div class="flex flex-wrap gap-1.5 mt-4">
+              {% for c in resto.categories.all %}
+                <span class="text-[10px] font-medium bg-[#F4ECE1] text-[#6B6156] px-2 py-0.5 rounded border border-[#E5DCD0]">
+                  {{ c.name }}
+                </span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-5 py-3 border-t border-[#E5DCD0] bg-[#FAF6F0] flex items-center justify-between text-xs">
+          <div>
+            <span class="text-[#6B6156] block text-[10px]">Livraison :</span>
+            <span class="font-semibold text-[#221C18]">{{ resto.delivery_fee|fcfa }} • {{ resto.estimated_delivery_time }}</span>
+          </div>
+          <a href="{% url 'restaurants:detail' resto.slug %}" class="btn-terracotta text-xs py-1.5 px-3">
+            Voir le menu
+          </a>
+        </div>
+      </article>
+    {% empty %}
+      <div class="col-span-3 text-center py-16 border border-[#E5DCD0] rounded bg-[#FFFFFF]">
+        <div class="font-serif text-lg font-bold text-[#221C18]">Aucun restaurant ne correspond à votre recherche</div>
+        <p class="text-xs text-[#6B6156] mt-1">Essayez de modifier votre mot-clé, votre quartier ou votre spécialité.</p>
+        <div class="mt-4">
+          <a href="{% url 'restaurants:list' %}" class="btn-outline-warm text-xs py-2 px-4">
+            Réinitialiser les filtres
+          </a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

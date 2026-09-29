@@ -1,0 +1,158 @@
+/* RestoGourmand - Identité Visuelle Authentique Camerounaise */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-bg-warm: #FAF6F0;
+  --color-surface: #FFFFFF;
+  --color-surface-soft: #F4ECE1;
+  --color-border: #E5DCD0;
+  --color-border-dark: #C9BBA9;
+  
+  --color-terracotta: #A83B19;
+  --color-terracotta-dark: #842A0D;
+  --color-ochre: #C27A23;
+  --color-ochre-light: #E8A14C;
+  --color-ndole: #274D36;
+  --color-ndole-dark: #1A3625;
+  --color-wood: #221C18;
+  --color-wood-soft: #38302A;
+  --color-text-main: #221C18;
+  --color-text-muted: #4A3E36;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--color-bg-warm);
+  color: var(--color-text-main);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-serif {
+  font-family: 'Fraunces', Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+/* Card and container styles: strictly crisp borders, no drop-shadows everywhere */
+.resto-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  transition: border-color 0.2s ease;
+}
+
+.resto-card:hover {
+  border-color: var(--color-border-dark);
+}
+
+.resto-card-soft {
+  background-color: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+/* Buttons */
+.btn-terracotta {
+  background-color: var(--color-terracotta);
+  color: #FFFFFF;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-terracotta-dark);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.btn-terracotta:hover {
+  background-color: var(--color-terracotta-dark);
+  color: #FFFFFF;
+}
+
+.btn-outline-warm {
+  background-color: transparent;
+  color: var(--color-wood);
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border-dark);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-outline-warm:hover {
+  background-color: var(--color-surface-soft);
+  border-color: var(--color-wood);
+}
+
+.btn-ndole {
+  background-color: var(--color-ndole);
+  color: #FFFFFF;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-ndole-dark);
+  text-decoration: none;
+}
+
+.btn-ndole:hover {
+  background-color: var(--color-ndole-dark);
+  color: #FFFFFF;
+}
+
+/* Authentic wax / woven border accent */
+.border-woven {
+  border-bottom: 3px double var(--color-ochre);
+}
+
+/* Badge spice styles */
+.badge-spice-doux {
+  background-color: #EBF4EE;
+  color: #234E32;
+  border: 1px solid #C1DEC8;
+}
+.badge-spice-moyen {
+  background-color: #FEF6EB;
+  color: #8C5311;
+  border: 1px solid #F5D5A5;
+}
+.badge-spice-releve {
+  background-color: #FDF0EB;
+  color: #A83B19;
+  border: 1px solid #F4C4B4;
+}
+.badge-spice-fort {
+  background-color: #F9E8E8;
+  color: #8B1B1B;
+  border: 1px solid #F1B2B2;
+}
+
+/* Sidebar Dashboard Navigation */
+.dashboard-sidebar {
+  background-color: #1E1815;
+  color: #D6CBC0;
+  width: 260px;
+  min-height: 100vh;
+}
+
+.dashboard-sidebar a {
+  color: #C0B4A6;
+  transition: all 0.15s ease;
+}
+
+.dashboard-sidebar a:hover, .dashboard-sidebar a.active {
+  background-color: #2E2520;
+  color: #FDF9F4;
+}

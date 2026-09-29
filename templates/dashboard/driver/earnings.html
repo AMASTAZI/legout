@@ -1,0 +1,76 @@
+{% extends 'dashboard_base.html' %}
+{% load resto_tags %}
+
+{% block title %}Mes Gains — Coursier Partenaire — {{ app_name }}{% endblock %}
+{% block header_title %}Historique des Gains & Courses Réalisées{% endblock %}
+{% block header_subtitle %}Suivi des rémunérations de livraison créditées sur votre compte Mobile Money{% endblock %}
+
+{% block nav_driver_earnings %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#6B6156]">Gains Cumulés</span>
+      <div class="font-serif font-bold text-2xl text-[#274D36] mt-1">{{ total_earned|fcfa }}</div>
+      <span class="text-[11px] text-[#6B6156] mt-1 block">Rémunération nette livreur</span>
+    </div>
+
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#6B6156]">Courses Terminées</span>
+      <div class="font-serif font-bold text-2xl text-[#221C18] mt-1">{{ deliveries_count }}</div>
+      <span class="text-[11px] text-[#6B6156] mt-1 block">Livrées avec validation PIN</span>
+    </div>
+
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#6B6156]">Mode de Versement</span>
+      <div class="font-serif font-bold text-base text-[#221C18] mt-1">MTN / Orange Money</div>
+      <span class="text-[11px] text-[#274D36] font-semibold mt-1 block">Paiement chaque vendredi</span>
+    </div>
+  </div>
+
+  <!-- Deliveries History Table -->
+  <div class="resto-card bg-[#FFFFFF] overflow-hidden">
+    <div class="p-5 border-b border-[#E5DCD0] flex items-center justify-between">
+      <h3 class="font-serif font-bold text-base text-[#221C18]">Historique des Courses Livrées</h3>
+      <span class="text-xs text-[#6B6156]">{{ deliveries|length }} course(s) enregistrée(s)</span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-[#FAF6F0] border-b border-[#E5DCD0] text-[#6B6156]">
+          <tr>
+            <th class="p-3.5 font-semibold">N° Commande</th>
+            <th class="p-3.5 font-semibold">Date de remise</th>
+            <th class="p-3.5 font-semibold">Restaurant</th>
+            <th class="p-3.5 font-semibold">Quartier Client</th>
+            <th class="p-3.5 font-semibold">Distance</th>
+            <th class="p-3.5 font-semibold text-right">Rémunération</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#E5DCD0]">
+          {% for d in deliveries %}
+            <tr class="hover:bg-[#FAF6F0]">
+              <td class="p-3.5 font-serif font-bold text-sm text-[#221C18]">#{{ d.order.order_number }}</td>
+              <td class="p-3.5 text-[#6B6156]">{{ d.delivered_at|date:"d/m/Y à H:i"|default:"Récent" }}</td>
+              <td class="p-3.5 font-semibold text-[#221C18]">{{ d.order.restaurant.name }}</td>
+              <td class="p-3.5 text-[#6B6156]">{{ d.order.delivery_neighborhood }}</td>
+              <td class="p-3.5 text-[#6B6156]">{{ d.distance_km }} km</td>
+              <td class="p-3.5 text-right font-mono font-bold text-sm text-[#274D36]">+ {{ d.driver_payout|fcfa }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="p-8 text-center text-[#6B6156]">
+                Vous n'avez pas encore terminé de courses. Les gains apparaîtront ici dès validation du premier code PIN client.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

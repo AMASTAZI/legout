@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load resto_tags %}
+
+{% block title %}Validation de Commande — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  
+  <div class="border-b border-[#E5DCD0] pb-4 mb-8">
+    <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Étape Finale</span>
+    <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#221C18] mt-1">Adresse de Livraison & Paiement</h1>
+    <p class="text-xs text-[#6B6156] mt-1">Vos plats seront préparés à la commande chez <strong>{{ restaurant.name }}</strong></p>
+  </div>
+
+  <form method="POST" action="{% url 'orders:checkout' %}" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    {% csrf_token %}
+
+    <!-- Left Column: Form Fields -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <!-- Delivery Address Card -->
+      <div class="resto-card p-6 bg-[#FFFFFF] space-y-4">
+        <h2 class="font-serif font-bold text-base text-[#221C18] pb-2 border-b border-[#E5DCD0] flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#A83B19]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          1. Destination de Livraison au Cameroun
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-[#221C18] mb-1">Ville de livraison</label>
+            <select name="delivery_city" class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-md px-3 py-2 text-xs font-semibold">
+              <option value="Douala" {% if user.city == 'Douala' or selected_city == 'Douala' %}selected{% endif %}>Douala</option>
+              <option value="Yaoundé" {% if user.city == 'Yaoundé' or selected_city == 'Yaoundé' %}selected{% endif %}>Yaoundé</option>
+              <option value="Kribi">Kribi</option>
+              <option value="Bafoussam">Bafoussam</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#221C18] mb-1">Quartier exact</label>
+            <input type="text" name="delivery_neighborhood" value="{{ user.neighborhood }}" required
+                   placeholder="Ex: Akwa, Bonapriso, Bastos, Deido..."
+                   class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-md px-3 py-2 text-xs focus:outline-none focus:border-[#A83B19]">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Rue / Numéro ou Nom de la résidence</label>
+          <input type="text" name="delivery_address" value="{{ user.address_details|default:'' }}" required
+                 placeholder="Ex: Rue des Cocotiers, Immeuble Les Palmiers, 2ème étage..."
+                 class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-md px-3 py-2 text-xs focus:outline-none focus:border-[#A83B19]">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">
+            Point de repère visuel (Indispensable pour le coursier)
+          </label>
+          <input type="text" name="delivery_landmark" required
+                 placeholder="Ex: Face pharmacie de la Paix, à côté de la boulangerie Saker, portail marron..."
+                 class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-md px-3 py-2 text-xs focus:outline-none focus:border-[#A83B19]">
+          <span class="text-[10px] text-[#6B6156] mt-1 block">Le livreur s'orientera avec ce repère pour vous trouver sans vous faire perdre de temps.</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Numéro de téléphone de contact (+237)</label>
+          <input type="text" name="delivery_phone" value="{{ user.phone }}" required
+                 placeholder="Ex: 699 00 11 22 ou 677 33 44 55"
+                 class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-md px-3 py-2 text-xs focus:outline-none focus:border-[#A83B19]">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Consignes spécifiques de dégustation ou livraison (optionnel)</label>
+          <textarea name="client_notes" rows="2" placeholder="Ex: Bien réchauffer, sauce bien pimentée, sonner à la porte sans crier..."
+                    class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-md px-3 py-2 text-xs focus:outline-none focus:border-[#A83B19]"></textarea>
+        </div>
+      </div>
+
+      <!-- Payment Method Selection Card -->
+      <div class="resto-card p-6 bg-[#FFFFFF] space-y-4">
+        <h2 class="font-serif font-bold text-base text-[#221C18] pb-2 border-b border-[#E5DCD0] flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#A83B19]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          2. Mode de Règlement
+        </h2>
+
+        <div class="space-y-3 text-xs">
+          <!-- Solde Portefeuille Simulé (10 000 FCFA de bienvenue) -->
+          <label class="flex items-center gap-3 p-3 rounded border-2 border-[#A83B19] bg-[#FAF6F0] hover:bg-[#F4ECE1] cursor-pointer">
+            <input type="radio" name="payment_method" value="wallet" checked class="text-[#A83B19] focus:ring-[#A83B19]">
+            <div class="flex-1">
+              <div class="font-bold text-[#221C18] flex items-center justify-between">
+                <span class="text-[#A83B19]">Solde Portefeuille Simulé (Bonus de test)</span>
+                <span class="bg-[#A83B19] text-white px-2 py-0.5 rounded text-[10px] font-bold">
+                  Solde : {{ request.user.wallet_balance|default:0 }} FCFA
+                </span>
+              </div>
+              <p class="text-[#6B6156] text-[11px] mt-0.5">
+                Réglez avec votre solde offert à l'inscription. Débit automatique simulé.
+                {% if request.user.wallet_balance < total_amount %}
+                  <span class="text-red-600 font-bold flex items-center gap-1 mt-0.5">
+                    <svg class="w-3.5 h-3.5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span>Solde insuffisant ({{ request.user.wallet_balance|default:0 }} FCFA disponibles vs {{ total_amount }} FCFA requis)</span>
+                  </span>
+                {% else %}
+                  <span class="text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
+                    <svg class="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <span>Solde suffisant pour régler la totalité de la commande</span>
+                  </span>
+                {% endif %}
+              </p>
+            </div>
+          </label>
+
+          <!-- MTN MoMo -->
+          <label class="flex items-center gap-3 p-3 rounded border border-[#E5DCD0] bg-[#FAF6F0] hover:bg-[#F4ECE1] cursor-pointer">
+            <input type="radio" name="payment_method" value="mtn_momo" class="text-[#A83B19] focus:ring-[#A83B19]">
+            <div class="flex-1">
+              <div class="font-bold text-[#221C18] flex items-center justify-between">
+                <span>MTN Mobile Money</span>
+                <span class="bg-[#2E2520] text-[#E8A14C] px-2 py-0.5 rounded text-[10px] font-mono font-bold">*126#</span>
+              </div>
+              <p class="text-[#6B6156] text-[11px] mt-0.5">Notification de débit instantanée sur votre téléphone MTN.</p>
+            </div>
+          </label>
+
+          <!-- Orange Money -->
+          <label class="flex items-center gap-3 p-3 rounded border border-[#E5DCD0] bg-[#FAF6F0] hover:bg-[#F4ECE1] cursor-pointer">
+            <input type="radio" name="payment_method" value="orange_money" class="text-[#A83B19] focus:ring-[#A83B19]">
+            <div class="flex-1">
+              <div class="font-bold text-[#221C18] flex items-center justify-between">
+                <span>Orange Money Cameroun</span>
+                <span class="bg-[#2E2520] text-[#FF7900] px-2 py-0.5 rounded text-[10px] font-mono font-bold">*150#</span>
+              </div>
+              <p class="text-[#6B6156] text-[11px] mt-0.5">Validation sécurisée par code secret Orange Money.</p>
+            </div>
+          </label>
+
+          <!-- CinetPay -->
+          <label class="flex items-center gap-3 p-3 rounded border border-[#E5DCD0] bg-[#FAF6F0] hover:bg-[#F4ECE1] cursor-pointer">
+            <input type="radio" name="payment_method" value="cinetpay" class="text-[#A83B19] focus:ring-[#A83B19]">
+            <div class="flex-1">
+              <div class="font-bold text-[#221C18] flex items-center justify-between">
+                <span>CinetPay Gateway</span>
+                <span class="bg-[#EBF4EE] text-[#234E32] px-2 py-0.5 rounded text-[10px] font-bold">Visa / Mastercard / MoMo</span>
+              </div>
+              <p class="text-[#6B6156] text-[11px] mt-0.5">Passerelle de paiement électronique panafricaine sécurisée.</p>
+            </div>
+          </label>
+
+          <!-- Cash on delivery -->
+          <label class="flex items-center gap-3 p-3 rounded border border-[#E5DCD0] bg-[#FAF6F0] hover:bg-[#F4ECE1] cursor-pointer">
+            <input type="radio" name="payment_method" value="cash_on_delivery" class="text-[#A83B19] focus:ring-[#A83B19]">
+            <div class="flex-1">
+              <div class="font-bold text-[#221C18] flex items-center justify-between">
+                <span>Espèces à la livraison</span>
+                <span class="bg-[#FAF6F0] border border-[#C9BBA9] text-[#221C18] px-2 py-0.5 rounded text-[10px] font-bold">Paiement au livreur</span>
+              </div>
+              <p class="text-[#6B6156] text-[11px] mt-0.5">Réglez le montant exact en espèces lors de la remise du repas.</p>
+            </div>
+          </label>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Right Column: Order Summary & Confirmation Button -->
+    <div class="lg:col-span-5">
+      <div class="resto-card p-6 bg-[#FFFFFF] space-y-5 sticky top-28">
+        <h2 class="font-serif font-bold text-base text-[#221C18] pb-3 border-b border-[#E5DCD0]">
+          Articles Commandés ({{ cart|length }})
+        </h2>
+
+        <div class="divide-y divide-[#E5DCD0] max-h-60 overflow-y-auto text-xs pr-1">
+          {% for dish in dishes %}
+            <div class="py-2.5 flex items-center justify-between gap-3">
+              <div>
+                <span class="font-bold text-[#221C18]">{{ cart|get_item:dish.id|default:1 }}x</span>
+                <span class="font-medium text-[#221C18] ml-1">{{ dish.name }}</span>
+              </div>
+              <span class="font-mono font-semibold text-[#221C18]">{{ dish.price|multiply:1|fcfa }}</span>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="pt-3 border-t border-[#E5DCD0] space-y-2 text-xs">
+          <div class="flex justify-between text-[#6B6156]">
+            <span>Sous-total plats :</span>
+            <span class="font-mono font-semibold text-[#221C18]">{{ subtotal|fcfa }}</span>
+          </div>
+          <div class="flex justify-between text-[#6B6156]">
+            <span>Frais de livraison :</span>
+            <span class="font-mono font-semibold text-[#221C18]">{{ delivery_fee|fcfa }}</span>
+          </div>
+          <div class="pt-3 border-t border-[#E5DCD0] flex justify-between text-lg font-bold text-[#221C18]">
+            <span>Total net à payer :</span>
+            <span class="font-mono text-[#A83B19]">{{ total_amount|fcfa }}</span>
+          </div>
+        </div>
+
+        <div class="p-3 bg-[#FAF6F0] rounded border border-[#E5DCD0] text-[11px] text-[#6B6156] leading-relaxed">
+          En validant votre commande, vous acceptez nos <a href="{% url 'core:cgu' %}" class="text-[#A83B19] underline" target="_blank">Conditions Générales de Vente</a>. Un code secret PIN vous sera transmis pour déverrouiller la livraison.
+        </div>
+
+        <button type="submit" class="w-full btn-terracotta text-sm font-semibold py-3 justify-center">
+          Confirmer & Lancer la commande
+        </button>
+
+      </div>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

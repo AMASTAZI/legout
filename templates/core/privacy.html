@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Politique de Confidentialité — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="border-b border-[#E5DCD0] pb-6 mb-8">
+    <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Protection des Données Personnelles</span>
+    <h1 class="font-serif text-3xl font-bold text-[#221C18] mt-1">Politique de Confidentialité</h1>
+    <p class="text-xs text-[#4A3E36] mt-2">Conforme à la loi N° 2010/012 du 21 décembre 2010 relative à la cybersécurité et la cybercriminalité au Cameroun</p>
+  </div>
+
+  <div class="space-y-8 text-sm text-[#38302A] leading-relaxed">
+    
+    <section class="space-y-3">
+      <h2 class="font-serif font-bold text-lg text-[#221C18]">1. Collecte des Données Personnelles</h2>
+      <p>
+        Dans le cadre de l'exploitation du service de commande et de livraison, <strong>Le Gout</strong> collecte uniquement les informations nécessaires au traitement et à l'acheminement de vos commandes :
+      </p>
+      <ul class="list-disc pl-5 space-y-1 text-xs text-[#4A3E36]">
+        <li>Nom, prénom et adresse email</li>
+        <li>Numéro de téléphone mobile camerounais pour la coordination de la livraison et les paiements Mobile Money</li>
+        <li>Quartier de livraison, repère visuel et coordonnées GPS transmises temporairement pendant la course</li>
+        <li>Historique des commandes et avis culinaires publiés</li>
+      </ul>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="font-serif font-bold text-lg text-[#221C18]">2. Finalité du Traitement des Données</h2>
+      <p>
+        Les données collectées sont utilisées exclusivement pour :
+      </p>
+      <ul class="list-disc pl-5 space-y-1 text-xs text-[#4A3E36]">
+        <li>Permettre la transmission de la commande à notre brigade en cuisine</li>
+        <li>Permettre au livreur d'acheminer le repas à votre adresse précise</li>
+        <li>Garantir la sécurité des transactions et la vérification par code PIN</li>
+        <li>Assurer le support client et la résolution des réclamations</li>
+      </ul>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="font-serif font-bold text-lg text-[#221C18]">3. Confidentialité & Non-Cession des Données</h2>
+      <p>
+        <strong>Le Gout</strong> s'engage formellement à ne jamais vendre, louer ou céder vos données personnelles à des tiers à des fins publicitaires. Seuls les membres de notre équipe et le coursier assigné à votre livraison ont accès temporairement à vos coordonnées pour les stricts besoins de la mission.
+      </p>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="font-serif font-bold text-lg text-[#221C18]">4. Sécurité des Données</h2>
+      <p>
+        Toutes les communications sur notre plateforme sont chiffrées. Les mots de passe sont hachés cryptographiquement via des algorithmes conformes aux standards de l'industrie. Aucune donnée bancaire sensible (code secret MoMo ou carte de crédit) n'est stockée sur nos serveurs ; les paiements sont délégués directement aux opérateurs de téléphonie et passerelles agréées (MTN, Orange, CinetPay).
+      </p>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="font-serif font-bold text-lg text-[#221C18]">5. Vos Droits d'Accès et de Rectification</h2>
+      <p>
+        Conformément à la réglementation camerounaise, vous disposez d'un droit permanent d'accès, de rectification et de suppression de vos données personnelles. Vous pouvez exercer ce droit à tout moment depuis votre espace profil ou en adressant un email à <code>contact@legout.cm</code>.
+      </p>
+    </section>
+
+  </div>
+</div>
+{% endblock %}

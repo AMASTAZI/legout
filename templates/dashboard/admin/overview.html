@@ -1,0 +1,102 @@
+{% extends 'dashboard_base.html' %}
+{% load resto_tags %}
+
+{% block title %}Administration Centrale — Le Gout{% endblock %}
+{% block header_title %}Tableau de Bord Administrateur Plateforme{% endblock %}
+{% block header_subtitle %}Supervision globale des volumes, flux financiers et opérations Le Gout{% endblock %}
+
+{% block nav_admin_overview %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+
+  <!-- KPI Metrics Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#4A3E36]">Volume d'Affaires Global (GMV)</span>
+      <div class="font-serif font-bold text-2xl text-[#221C18] mt-1">{{ total_gmv|fcfa }}</div>
+      <span class="text-xs text-[#274D36] font-medium mt-1 block">Flux total payé par les clients</span>
+    </div>
+
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#4A3E36]">Commissions Plateforme (10%)</span>
+      <div class="font-serif font-bold text-2xl text-[#A83B19] mt-1">{{ commission|fcfa }}</div>
+      <span class="text-xs text-[#A83B19] font-medium mt-1 block">Revenu net Le Gout</span>
+    </div>
+
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#4A3E36]">Commandes Enregistrées</span>
+      <div class="font-serif font-bold text-2xl text-[#221C18] mt-1">{{ total_orders }}</div>
+      <span class="text-xs text-[#4A3E36] mt-1 block">Douala & agglomérations</span>
+    </div>
+
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#4A3E36]">Réseau Opérationnel</span>
+      <div class="font-serif font-bold text-xl text-[#221C18] mt-1">
+        {{ restaurants_count }} resto • {{ drivers_count }} coursiers
+      </div>
+      <span class="text-xs text-[#4A3E36] mt-1 block">{{ clients_count }} clients inscrits</span>
+    </div>
+
+  </div>
+
+  <!-- Live Orders Supervision Board -->
+  <div class="resto-card bg-[#FFFFFF] overflow-hidden">
+    <div class="p-5 border-b border-[#E5DCD0] flex items-center justify-between">
+      <div>
+        <h3 class="font-serif font-bold text-base text-[#221C18]">Dernières Commandes Plateforme</h3>
+        <p class="text-xs text-[#6B6156]">Supervision en direct de l'acheminement et des règlements</p>
+      </div>
+      <span class="text-xs text-[#274D36] font-semibold flex items-center gap-1">
+        <span class="w-2 h-2 rounded-full bg-[#274D36] animate-pulse"></span>
+        Flux actif
+      </span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-[#FAF6F0] border-b border-[#E5DCD0] text-[#6B6156]">
+          <tr>
+            <th class="p-3.5 font-semibold">N° Commande</th>
+            <th class="p-3.5 font-semibold">Date & Heure</th>
+            <th class="p-3.5 font-semibold">Restaurant</th>
+            <th class="p-3.5 font-semibold">Client & Repère</th>
+            <th class="p-3.5 font-semibold">Moyen & Paiement</th>
+            <th class="p-3.5 font-semibold">Statut</th>
+            <th class="p-3.5 font-semibold">Total</th>
+            <th class="p-3.5 font-semibold text-right">Supervision</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#E5DCD0]">
+          {% for order in recent_orders %}
+            <tr class="hover:bg-[#FAF6F0]">
+              <td class="p-3.5 font-serif font-bold text-sm text-[#221C18]">#{{ order.order_number }}</td>
+              <td class="p-3.5 text-[#6B6156]">{{ order.created_at|date:"d/m/Y H:i" }}</td>
+              <td class="p-3.5 font-semibold text-[#221C18]">{{ order.restaurant.name }}</td>
+              <td class="p-3.5">
+                <div class="font-bold text-[#221C18]">{{ order.client.get_full_name|default:order.client.username }}</div>
+                <div class="text-[10px] text-[#A89E92]">{{ order.delivery_neighborhood }} ({{ order.delivery_landmark|truncatechars:25 }})</div>
+              </td>
+              <td class="p-3.5">
+                <span class="text-[11px] font-semibold text-[#221C18]">{{ order.get_payment_method_display }}</span>
+                <span class="block text-[10px] {% if order.payment_status == 'paid' %}text-[#274D36]{% else %}text-[#A83B19]{% endif %}">
+                  {{ order.get_payment_status_display }}
+                </span>
+              </td>
+              <td class="p-3.5">{{ order.status|status_badge }}</td>
+              <td class="p-3.5 font-mono font-bold text-sm text-[#221C18]">{{ order.total_amount|fcfa }}</td>
+              <td class="p-3.5 text-right">
+                <a href="{% url 'orders:tracking' order.order_number %}" class="btn-outline-warm text-[11px] py-1 px-2.5">
+                  Suivi GPS &rarr;
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

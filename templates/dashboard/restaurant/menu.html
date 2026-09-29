@@ -1,0 +1,656 @@
+{% extends 'dashboard_base.html' %}
+{% load resto_tags %}
+
+{% block title %}Gestion de la Carte & Boissons — {{ restaurant.name }}{% endblock %}
+{% block header_title %}Carte, Plats & Boissons du Terroir{% endblock %}
+{% block header_subtitle %}Ajoutez, modifiez ou supprimez vos plats et boissons. Vos modifications sont persistées directement en base de données.{% endblock %}
+
+{% block nav_resto_menu %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-8">
+
+  <!-- Add New Product Form (Plat ou Boisson) -->
+  <div class="resto-card p-6 bg-[#FFFFFF]">
+    <div class="flex items-center justify-between pb-3 border-b border-[#E5DCD0]">
+      <div>
+        <h3 class="font-serif font-bold text-base text-[#221C18]">
+          Enregistrer un Nouveau Produit en Base (Plat ou Boisson)
+        </h3>
+        <p class="text-xs text-[#6B6156]">Renseignez les informations authentiques pour mettre à jour votre carte</p>
+      </div>
+      <span class="text-xs font-bold text-[#A83B19] bg-[#FDF0EB] px-2.5 py-1 rounded border border-[#F4C4B4]">
+        CRUD Direct Base
+      </span>
+    </div>
+
+    <form id="add-dish-form" method="POST" action="{% url 'dashboard:restaurant_add_dish' %}" enctype="multipart/form-data" class="space-y-4 mt-4 text-xs">
+      {% csrf_token %}
+      
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div>
+          <label class="block font-semibold text-[#221C18] mb-1">Type de produit *</label>
+          <select name="product_type" id="product_type_select" onchange="toggleProductTypeFields(this.value)" 
+                  class="w-full bg-[#FAF6F0] border border-[#A83B19] rounded px-3 py-2 text-xs font-bold text-[#A83B19]">
+            <option value="plat" selected>Plat principal du terroir</option>
+            <option value="boisson">Boisson & Rafraîchissement</option>
+            <option value="entree">Entrée / Street food</option>
+            <option value="dessert">Dessert / Douceur</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block font-semibold text-[#221C18] mb-1">Nom du plat ou de la boisson *</label>
+          <input type="text" name="name" required placeholder="Ex: Jus de Gingembre pressé frais (1L) ou Ndolè Royal" 
+                 class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-[#221C18] mb-1">Prix de vente en FCFA *</label>
+          <input type="number" name="price" required placeholder="Ex: 2500" 
+                 class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs font-mono font-bold">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block font-semibold text-[#221C18] mb-1">Catégorie culinaire</label>
+          <select name="category" class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs font-semibold">
+            {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div id="field_spice">
+          <label class="block font-semibold text-[#221C18] mb-1">Degré de piment / épices</label>
+          <select name="spice_level" class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs font-semibold">
+            <option value="doux">Doux (sans piment)</option>
+            <option value="moyen" selected>Piment moyen (aromatique)</option>
+            <option value="releve">Relevé (piment jaune)</option>
+            <option value="fort">Très fort (piment oiseau)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-[#221C18] mb-1" id="label_sides">Garniture ou Conditionnement</label>
+          <input type="text" name="sides" id="input_sides" value="Plantains mûrs frits ou miondo" 
+                 class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs">
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#221C18] mb-1">Description des ingrédients authentiques</label>
+        <textarea name="description" rows="2" placeholder="Détaillez les ingrédients, la préparation au feu de bois ou les fruits frais pressés..." 
+                  class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs"></textarea>
+      </div>
+
+      <!-- Zone de Téléversement Personnalisée & Aperçu Immédiat -->
+      <div>
+        <label class="block font-semibold text-[#221C18] mb-1.5 flex items-center justify-between">
+          <span>Photo authentique du plat ou de la boisson *</span>
+          <span class="text-[10px] text-[#6B6156] font-normal">Formats acceptés : JPG, JPEG, PNG, WEBP (Max 5 Mo)</span>
+        </label>
+
+        <!-- Hidden File Input -->
+        <input type="file" name="image_file" id="add_dish_image_input" 
+               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" 
+               class="hidden">
+
+        <!-- Custom Drop Zone -->
+        <div id="add_dish_drop_zone" 
+             onclick="document.getElementById('add_dish_image_input').click()"
+             class="border-2 border-dashed border-[#C9BBA9] hover:border-[#A83B19] rounded-lg p-6 bg-[#FAF6F0] hover:bg-[#FDF0EB]/40 transition-all cursor-pointer text-center group">
+          <div class="w-12 h-12 rounded-full bg-[#F4ECE1] group-hover:bg-[#FDF0EB] text-[#A83B19] flex items-center justify-center mx-auto mb-2.5 transition-colors border border-[#E5DCD0] group-hover:border-[#F4C4B4]">
+            <svg class="w-6 h-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <p class="text-sm font-bold text-[#221C18] group-hover:text-[#A83B19] transition-colors">
+            Ajouter une photo du plat
+          </p>
+          <p class="text-xs text-[#6B6156] mt-1">
+            Cliquez pour choisir une image ou déposez-la ici
+          </p>
+          <div class="mt-2.5">
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#A83B19] bg-[#FFFFFF] px-2.5 py-1 rounded-md border border-[#E5DCD0] shadow-2xs">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span>Sélectionner depuis l'ordinateur ou mobile</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Preview Area (visible immediately when an image is selected) -->
+        <div id="add_dish_preview_wrapper" class="hidden mt-2 bg-[#FAF6F0] border border-[#E5DCD0] rounded-lg p-3">
+          <div class="flex flex-col sm:flex-row items-center gap-4">
+            <div class="relative w-full sm:w-36 h-28 rounded-md overflow-hidden border border-[#E5DCD0] bg-white flex-shrink-0">
+              <img id="add_dish_preview_img" src="" alt="Aperçu" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1 space-y-1.5 text-left w-full">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#EBF4EE] text-[#234E32] border border-[#C1DEC8]">
+                  <svg class="w-3 h-3 text-[#234E32]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                  <span>Image prête à l'enregistrement</span>
+                </span>
+              </div>
+              <p id="add_dish_file_name" class="text-xs font-semibold text-[#221C18] truncate max-w-md"></p>
+              <p id="add_dish_file_size" class="text-[11px] text-[#6B6156]"></p>
+              <div class="flex items-center gap-2 pt-1">
+                <button type="button" onclick="document.getElementById('add_dish_image_input').click()" 
+                        class="btn-outline-warm text-[11px] py-1 px-2.5 font-medium">
+                  Remplacer l'image
+                </button>
+                <button type="button" onclick="resetAddDishImage()" 
+                        class="text-[11px] text-[#8B1B1B] hover:underline font-medium px-2 py-1">
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Message Display -->
+        <div id="add_dish_image_error" class="hidden mt-2 p-2.5 rounded bg-[#FDF0EB] border border-[#F4C4B4] text-xs text-[#8B1B1B] font-medium flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#8B1B1B] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <span id="add_dish_image_error_text"></span>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button type="submit" class="btn-terracotta text-xs py-2 px-6 font-semibold">
+          Enregistrer en base de données
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- SECTION 1: Plats Principaux & Spécialités Chaudes -->
+  <div class="resto-card bg-[#FFFFFF] overflow-hidden">
+    <div class="p-5 border-b border-[#E5DCD0] flex items-center justify-between bg-[#FAF6F0]">
+      <div>
+        <h3 class="font-serif font-bold text-base text-[#221C18] flex items-center gap-2">
+          <svg class="w-5 h-5 text-[#A83B19] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 0a8 8 0 018 8v1H4v-1a8 8 0 018-8zm-8 11h16a2 2 0 012 2H2a2 2 0 012-2z"/></svg>
+          <span>Plats Principaux & Spécialités Chaudes ({{ food_dishes|length }})</span>
+        </h3>
+        <p class="text-xs text-[#6B6156]">Gestion des prix, descriptions et disponibilités des plats mijotés et braisés</p>
+      </div>
+    </div>
+
+    <div class="divide-y divide-[#E5DCD0]">
+      {% for dish in food_dishes %}
+        <div class="p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 hover:bg-[#FAF6F0]">
+          
+          <div class="flex items-start gap-4 flex-1">
+            <img src="{{ dish.image }}" alt="{{ dish.name }}" class="w-16 h-16 rounded object-cover border border-[#E5DCD0] flex-shrink-0">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-serif font-bold text-sm text-[#221C18]">{{ dish.name }}</h4>
+                <span class="text-[10px] font-semibold text-[#A83B19] bg-[#FDF0EB] px-1.5 py-0.5 rounded border border-[#F4C4B4]">
+                  {{ dish.category.name|default:"Général" }}
+                </span>
+                <span class="text-[10px] text-[#6B6156]">
+                  {{ dish.get_spice_level_display }}
+                </span>
+              </div>
+              <p class="text-xs text-[#6B6156] line-clamp-2 max-w-xl">{{ dish.description }}</p>
+              <div class="text-[11px] text-[#274D36]">Garniture : {{ dish.sides_included }}</div>
+            </div>
+          </div>
+
+          <!-- Price & Management Actions -->
+          <div class="flex flex-wrap items-center gap-3 self-stretch lg:self-auto justify-between lg:justify-end border-t lg:border-t-0 pt-3 lg:pt-0 border-[#E5DCD0]">
+            <span class="font-mono font-bold text-base text-[#221C18]">{{ dish.price|fcfa }}</span>
+
+            <!-- Toggle Availability -->
+            <form method="POST" action="{% url 'dashboard:restaurant_toggle_dish' dish.id %}">
+              {% csrf_token %}
+              {% if dish.is_available %}
+                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-semibold bg-[#EBF4EE] text-[#234E32] border border-[#C1DEC8] hover:bg-[#D5EADC]" title="Cliquer pour passer en rupture">
+                  <svg class="w-3.5 h-3.5 text-[#234E32]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                  <span>En stock</span>
+                </button>
+              {% else %}
+                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-semibold bg-[#FDF0EB] text-[#8B1B1B] border border-[#F4C4B4] hover:bg-[#F9D6CC]" title="Cliquer pour réactiver">
+                  <svg class="w-3.5 h-3.5 text-[#8B1B1B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                  <span>Rupture</span>
+                </button>
+              {% endif %}
+            </form>
+
+            <!-- Edit Button (Toggles edit modal/form) -->
+            <button type="button" onclick="openEditModal('{{ dish.id }}', '{{ dish.name|escapejs }}', '{{ dish.price }}', '{{ dish.description|escapejs }}', '{{ dish.product_type }}', '{{ dish.sides_included|escapejs }}', {{ dish.is_available|yesno:'true,false' }}, '{{ dish.category.id|default:'' }}', '{{ dish.image|escapejs }}')" 
+                    class="btn-outline-warm text-xs py-1.5 px-3">
+              Modifier
+            </button>
+
+            <!-- Delete Button -->
+            <form method="POST" action="{% url 'dashboard:restaurant_delete_dish' dish.id %}" onsubmit="return confirm('Confirmez-vous la suppression définitive du plat \'{{ dish.name|escapejs }}\' de la base de données ?');">
+              {% csrf_token %}
+              <button type="submit" class="p-1.5 text-[#A89E92] hover:text-[#8B1B1B] rounded hover:bg-[#FDF0EB]" title="Supprimer de la base">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </form>
+          </div>
+
+        </div>
+      {% empty %}
+        <div class="p-8 text-center text-xs text-[#6B6156]">
+          Aucun plat principal enregistré. Remplissez le formulaire ci-dessus pour en ajouter un.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- SECTION 2: Boissons & Rafraîchissements du Terroir -->
+  <div class="resto-card bg-[#FFFFFF] overflow-hidden border-2 border-[#C27A23]">
+    <div class="p-5 border-b border-[#E5DCD0] flex items-center justify-between bg-[#FEF6EB]">
+      <div>
+        <h3 class="font-serif font-bold text-base text-[#8C5311] flex items-center gap-2">
+          <svg class="w-5 h-5 text-[#8C5311] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 8h2a3 3 0 01-3 3h-1m-10 0H5a3 3 0 01-3-3h2m0 0V5a2 2 0 012-2h12a2 2 0 012 2v6a5 5 0 01-5 5H9a5 5 0 01-5-5zM6 19h12"/></svg>
+          <span>Boissons & Rafraîchissements du Terroir ({{ drinks|length }})</span>
+        </h3>
+        <p class="text-xs text-[#6B6156]">Gestion des jus naturels, infusions locales (Foléré, Gingembre, Corossol) et formats bouteilles</p>
+      </div>
+      <span class="text-xs font-bold text-[#8C5311] bg-[#FFFFFF] px-2.5 py-1 rounded border border-[#F5D5A5]">
+        Section Boissons Dédiée
+      </span>
+    </div>
+
+    <div class="divide-y divide-[#E5DCD0]">
+      {% for drink in drinks %}
+        <div class="p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 hover:bg-[#FAF6F0]">
+          
+          <div class="flex items-start gap-4 flex-1">
+            <img src="{{ drink.image }}" alt="{{ drink.name }}" class="w-16 h-16 rounded object-cover border border-[#E5DCD0] flex-shrink-0">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-serif font-bold text-sm text-[#221C18]">{{ drink.name }}</h4>
+                <span class="text-[10px] font-semibold text-[#8C5311] bg-[#FEF6EB] px-2 py-0.5 rounded border border-[#F5D5A5]">
+                  Boisson Artisanale
+                </span>
+              </div>
+              <p class="text-xs text-[#6B6156] line-clamp-2 max-w-xl">{{ drink.description }}</p>
+              <div class="text-[11px] text-[#A83B19] font-medium">Conditionnement : {{ drink.sides_included }}</div>
+            </div>
+          </div>
+
+          <!-- Price & Management Actions -->
+          <div class="flex flex-wrap items-center gap-3 self-stretch lg:self-auto justify-between lg:justify-end border-t lg:border-t-0 pt-3 lg:pt-0 border-[#E5DCD0]">
+            <span class="font-mono font-bold text-base text-[#221C18]">{{ drink.price|fcfa }}</span>
+
+            <!-- Toggle Availability -->
+            <form method="POST" action="{% url 'dashboard:restaurant_toggle_dish' drink.id %}">
+              {% csrf_token %}
+              {% if drink.is_available %}
+                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-semibold bg-[#EBF4EE] text-[#234E32] border border-[#C1DEC8] hover:bg-[#D5EADC]">
+                  <svg class="w-3.5 h-3.5 text-[#234E32]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                  <span>Frais en stock</span>
+                </button>
+              {% else %}
+                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-semibold bg-[#FDF0EB] text-[#8B1B1B] border border-[#F4C4B4] hover:bg-[#F9D6CC]">
+                  <svg class="w-3.5 h-3.5 text-[#8B1B1B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                  <span>Rupture</span>
+                </button>
+              {% endif %}
+            </form>
+
+            <!-- Edit Button -->
+            <button type="button" onclick="openEditModal('{{ drink.id }}', '{{ drink.name|escapejs }}', '{{ drink.price }}', '{{ drink.description|escapejs }}', '{{ drink.product_type }}', '{{ drink.sides_included|escapejs }}', {{ drink.is_available|yesno:'true,false' }}, '{{ drink.category.id|default:'' }}', '{{ drink.image|escapejs }}')" 
+                    class="btn-outline-warm text-xs py-1.5 px-3">
+              Modifier
+            </button>
+
+            <!-- Delete Button -->
+            <form method="POST" action="{% url 'dashboard:restaurant_delete_dish' drink.id %}" onsubmit="return confirm('Confirmez-vous la suppression de la boisson \'{{ drink.name|escapejs }}\' ?');">
+              {% csrf_token %}
+              <button type="submit" class="p-1.5 text-[#A89E92] hover:text-[#8B1B1B] rounded hover:bg-[#FDF0EB]" title="Supprimer de la base">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </form>
+          </div>
+
+        </div>
+      {% empty %}
+        <div class="p-8 text-center text-xs text-[#6B6156]">
+          Aucune boisson locale enregistrée dans votre établissement. Sélectionnez le type <strong>"Boisson & Rafraîchissement"</strong> ci-dessus pour ajouter du Foléré ou du jus de gingembre.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal de Modification de Produit -->
+<div id="edit-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-[#FFFFFF] border border-[#E5DCD0] rounded-lg max-w-lg w-full p-6 space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-[#E5DCD0]">
+      <h3 class="font-serif font-bold text-base text-[#221C18]">Modifier le Produit en Base</h3>
+      <button type="button" onclick="closeEditModal()" class="text-[#6B6156] hover:text-[#221C18] text-lg font-bold">&times;</button>
+    </div>
+
+    <form id="edit-form" method="POST" action="" enctype="multipart/form-data" class="space-y-3 text-xs">
+      {% csrf_token %}
+      
+      <div>
+        <label class="block font-semibold text-[#221C18] mb-1">Nom du produit *</label>
+        <input type="text" name="name" id="edit_name" required class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs">
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="block font-semibold text-[#221C18] mb-1">Prix (FCFA) *</label>
+          <input type="number" name="price" id="edit_price" required class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs font-mono font-bold">
+        </div>
+        <div>
+          <label class="block font-semibold text-[#221C18] mb-1">Type de produit</label>
+          <select name="product_type" id="edit_product_type" class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs font-semibold">
+            <option value="plat">Plat principal</option>
+            <option value="boisson">Boisson & Rafraîchissement</option>
+            <option value="entree">Entrée / Street food</option>
+            <option value="dessert">Dessert / Douceur</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-[#221C18] mb-1">Catégorie</label>
+          <select name="category" id="edit_category" class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs font-semibold">
+            {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#221C18] mb-1">Garnitures / Conditionnement</label>
+        <input type="text" name="sides" id="edit_sides" class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs">
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#221C18] mb-1">Description des ingrédients</label>
+        <textarea name="description" id="edit_description" rows="2" class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded px-3 py-2 text-xs"></textarea>
+      </div>
+
+      <!-- Zone Photo pour la modification -->
+      <div>
+        <label class="block font-semibold text-[#221C18] mb-1.5 flex items-center justify-between">
+          <span>Photo du plat ou de la boisson</span>
+          <span class="text-[10px] text-[#6B6156]">JPG, JPEG, PNG, WEBP (Max 5 Mo)</span>
+        </label>
+
+        <!-- Hidden input for edit -->
+        <input type="file" name="image_file" id="edit_dish_image_input" 
+               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" 
+               class="hidden">
+
+        <!-- Drop zone for edit (shown if no image or when replacing) -->
+        <div id="edit_dish_drop_zone" 
+             onclick="document.getElementById('edit_dish_image_input').click()"
+             class="border-2 border-dashed border-[#C9BBA9] hover:border-[#A83B19] rounded-lg p-4 bg-[#FAF6F0] hover:bg-[#FDF0EB]/40 transition-all cursor-pointer text-center group hidden">
+          <div class="w-10 h-10 rounded-full bg-[#F4ECE1] group-hover:bg-[#FDF0EB] text-[#A83B19] flex items-center justify-center mx-auto mb-2 transition-colors border border-[#E5DCD0]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <p class="text-xs font-bold text-[#221C18]">Cliquez pour choisir une nouvelle image ou déposez-la ici</p>
+        </div>
+
+        <!-- Preview Area for edit -->
+        <div id="edit_dish_preview_wrapper" class="bg-[#FAF6F0] border border-[#E5DCD0] rounded-lg p-3">
+          <div class="flex items-center gap-3">
+            <div class="relative w-24 h-20 rounded-md overflow-hidden border border-[#E5DCD0] bg-white flex-shrink-0">
+              <img id="edit_dish_preview_img" src="" alt="Photo actuelle" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1 space-y-1 text-left min-w-0">
+              <span id="edit_dish_badge" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF6F0] text-[#A83B19] border border-[#E5DCD0]">
+                Photo actuelle
+              </span>
+              <p id="edit_dish_file_name" class="text-xs font-semibold text-[#221C18] truncate"></p>
+              <div class="flex items-center gap-2 pt-1">
+                <button type="button" onclick="document.getElementById('edit_dish_image_input').click()" 
+                        class="btn-outline-warm text-[11px] py-1 px-2.5 font-medium">
+                  Remplacer la photo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Message for edit -->
+        <div id="edit_dish_image_error" class="hidden mt-2 p-2 rounded bg-[#FDF0EB] border border-[#F4C4B4] text-xs text-[#8B1B1B] font-medium flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#8B1B1B] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <span id="edit_dish_image_error_text"></span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-1">
+        <input type="checkbox" name="is_available" id="edit_available" class="rounded text-[#A83B19]">
+        <label for="edit_available" class="font-semibold text-[#221C18]">Disponible actuellement en cuisine</label>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-[#E5DCD0]">
+        <button type="button" onclick="closeEditModal()" class="btn-outline-warm text-xs py-1.5 px-4">Annuler</button>
+        <button type="submit" class="btn-terracotta text-xs py-1.5 px-5 font-semibold">Mettre à jour en base</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.webp'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Mo
+
+function setupUploader(inputId, dropZoneId, previewWrapperId, previewImgId, fileNameId, fileSizeId, errorBoxId, errorTextId, isEdit) {
+  const input = document.getElementById(inputId);
+  const dropZone = document.getElementById(dropZoneId);
+  const previewWrapper = document.getElementById(previewWrapperId);
+  const previewImg = document.getElementById(previewImgId);
+  const fileName = document.getElementById(fileNameId);
+  const fileSize = fileSizeId ? document.getElementById(fileSizeId) : null;
+  const errorBox = document.getElementById(errorBoxId);
+  const errorText = document.getElementById(errorTextId);
+
+  if (!input || !dropZone) return;
+
+  function showError(msg) {
+    if (errorBox && errorText) {
+      errorText.textContent = msg;
+      errorBox.classList.remove('hidden');
+    }
+  }
+
+  function hideError() {
+    if (errorBox) errorBox.classList.add('hidden');
+  }
+
+  function handleFile(file) {
+    hideError();
+    if (!file) return;
+
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED_TYPES.includes(file.type) && !ALLOWED_EXTS.includes(ext)) {
+      showError("Format non accepté. Veuillez sélectionner une photo JPG, JPEG, PNG ou WEBP.");
+      input.value = '';
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      showError("L'image est trop volumineuse (" + (file.size / (1024 * 1024)).toFixed(1) + " Mo). Limite : 5 Mo.");
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      previewImg.src = e.target.result;
+      if (fileName) fileName.textContent = file.name;
+      if (fileSize) fileSize.textContent = "(" + (file.size / 1024).toFixed(0) + " Ko)";
+      if (previewWrapper) previewWrapper.classList.remove('hidden');
+      dropZone.classList.add('hidden');
+
+      if (isEdit) {
+        const badge = document.getElementById('edit_dish_badge');
+        if (badge) {
+          badge.textContent = "Nouvelle photo sélectionnée";
+          badge.className = "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#EBF4EE] text-[#234E32] border border-[#C1DEC8]";
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  input.addEventListener('change', function(e) {
+    if (this.files && this.files[0]) {
+      handleFile(this.files[0]);
+    }
+  });
+
+  // Glisser-déposer (Drag and Drop)
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add('border-[#A83B19]', 'bg-[#FDF0EB]');
+    }, false);
+  });
+
+  ['dragleave', 'dragend', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('border-[#A83B19]', 'bg-[#FDF0EB]');
+    }, false);
+  });
+
+  dropZone.addEventListener('drop', function(e) {
+    const dt = e.dataTransfer;
+    if (dt && dt.files && dt.files[0]) {
+      input.files = dt.files;
+      handleFile(dt.files[0]);
+    }
+  }, false);
+}
+
+function resetAddDishImage() {
+  const input = document.getElementById('add_dish_image_input');
+  const previewWrapper = document.getElementById('add_dish_preview_wrapper');
+  const dropZone = document.getElementById('add_dish_drop_zone');
+  const previewImg = document.getElementById('add_dish_preview_img');
+  const errorBox = document.getElementById('add_dish_image_error');
+  if (input) input.value = '';
+  if (previewImg) previewImg.src = '';
+  if (previewWrapper) previewWrapper.classList.add('hidden');
+  if (dropZone) dropZone.classList.remove('hidden');
+  if (errorBox) errorBox.classList.add('hidden');
+}
+
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+  setupUploader(
+    'add_dish_image_input',
+    'add_dish_drop_zone',
+    'add_dish_preview_wrapper',
+    'add_dish_preview_img',
+    'add_dish_file_name',
+    'add_dish_file_size',
+    'add_dish_image_error',
+    'add_dish_image_error_text',
+    false
+  );
+
+  setupUploader(
+    'edit_dish_image_input',
+    'edit_dish_drop_zone',
+    'edit_dish_preview_wrapper',
+    'edit_dish_preview_img',
+    'edit_dish_file_name',
+    null,
+    'edit_dish_image_error',
+    'edit_dish_image_error_text',
+    true
+  );
+
+  // Validation obligatoire côté client avant soumission à l'ajout
+  const addForm = document.getElementById('add-dish-form');
+  if (addForm) {
+    addForm.addEventListener('submit', function(e) {
+      const input = document.getElementById('add_dish_image_input');
+      const errorBox = document.getElementById('add_dish_image_error');
+      const errorText = document.getElementById('add_dish_image_error_text');
+      if (!input || !input.files || input.files.length === 0) {
+        e.preventDefault();
+        if (errorBox && errorText) {
+          errorText.textContent = "La photo du plat ou de la boisson est obligatoire pour enregistrer le produit.";
+          errorBox.classList.remove('hidden');
+        }
+        document.getElementById('add_dish_drop_zone').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+});
+
+function toggleProductTypeFields(type) {
+  const sidesInput = document.getElementById('input_sides');
+  const sidesLabel = document.getElementById('label_sides');
+  const spiceField = document.getElementById('field_spice');
+
+  if (type === 'boisson') {
+    sidesLabel.innerText = "Conditionnement / Volume";
+    sidesInput.value = "Bouteille en verre consignée 1L";
+    if (spiceField) spiceField.style.opacity = '0.5';
+  } else {
+    sidesLabel.innerText = "Garnitures incluses";
+    sidesInput.value = "Plantains mûrs frits (dodo) ou miondo";
+    if (spiceField) spiceField.style.opacity = '1';
+  }
+}
+
+function openEditModal(dishId, name, price, description, productType, sides, isAvailable, categoryId, imageUrl) {
+  const form = document.getElementById('edit-form');
+  form.action = `/dashboard/restaurant/menu/modifier/${dishId}/`;
+  document.getElementById('edit_name').value = name;
+  document.getElementById('edit_price').value = price;
+  document.getElementById('edit_description').value = description;
+  document.getElementById('edit_product_type').value = productType;
+  document.getElementById('edit_sides').value = sides;
+  document.getElementById('edit_available').checked = isAvailable;
+
+  const catSelect = document.getElementById('edit_category');
+  if (catSelect && categoryId) {
+    catSelect.value = categoryId;
+  }
+
+  // Configuration de l'aperçu de l'image actuelle
+  const previewWrapper = document.getElementById('edit_dish_preview_wrapper');
+  const previewImg = document.getElementById('edit_dish_preview_img');
+  const dropZone = document.getElementById('edit_dish_drop_zone');
+  const fileName = document.getElementById('edit_dish_file_name');
+  const badge = document.getElementById('edit_dish_badge');
+  const fileInput = document.getElementById('edit_dish_image_input');
+  const errorBox = document.getElementById('edit_dish_image_error');
+
+  if (errorBox) errorBox.classList.add('hidden');
+  if (fileInput) fileInput.value = '';
+
+  if (imageUrl) {
+    previewImg.src = imageUrl;
+    previewWrapper.classList.remove('hidden');
+    dropZone.classList.add('hidden');
+    if (badge) {
+      badge.textContent = "Photo actuelle";
+      badge.className = "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF6F0] text-[#A83B19] border border-[#E5DCD0]";
+    }
+    if (fileName) fileName.textContent = name;
+  } else {
+    previewWrapper.classList.add('hidden');
+    dropZone.classList.remove('hidden');
+  }
+
+  document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.add('hidden');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends 'base_dashboard.html' %}
+{% load resto_tags %}
+
+{% block title %}Gestion des Utilisateurs — Administration Le Gout{% endblock %}
+{% block header_title %}Répertoire des Utilisateurs & Gestion de l'Équipe{% endblock %}
+{% block header_subtitle %}Gérez les comptes clients, créez les profils restaurateurs et livreurs partenaires{% endblock %}
+
+{% block nav_admin_users %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+
+  <!-- Action Bar & Role Filters -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-2 text-xs flex-wrap">
+      <span class="text-[#6B6156]">Filtrer :</span>
+      <a href="{% url 'dashboard:admin_users' %}" 
+         class="px-3 py-1 rounded border {% if not current_role %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+        Tous
+      </a>
+      <a href="?role=client" 
+         class="px-3 py-1 rounded border {% if current_role == 'client' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+        Clients
+      </a>
+      <a href="?role=restaurateur" 
+         class="px-3 py-1 rounded border {% if current_role == 'restaurateur' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+        Restaurateurs
+      </a>
+      <a href="?role=livreur" 
+         class="px-3 py-1 rounded border {% if current_role == 'livreur' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+        Livreurs
+      </a>
+      <a href="?role=admin" 
+         class="px-3 py-1 rounded border {% if current_role == 'admin' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+        Admins
+      </a>
+    </div>
+
+    <div>
+      <a href="{% url 'dashboard:admin_create_staff' %}" class="btn-terracotta text-xs py-2 px-3 inline-flex items-center gap-1.5">
+        <span>+</span> Créer un compte Restaurateur ou Livreur
+      </a>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="resto-card bg-[#FFFFFF] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-[#FAF6F0] border-b border-[#E5DCD0] text-[#6B6156]">
+          <tr>
+            <th class="p-3.5 font-semibold">Utilisateur</th>
+            <th class="p-3.5 font-semibold">Rôle</th>
+            <th class="p-3.5 font-semibold">Téléphone</th>
+            <th class="p-3.5 font-semibold">Ville & Quartier</th>
+            <th class="p-3.5 font-semibold">Sécurité / Statut</th>
+            <th class="p-3.5 font-semibold">Date d'inscription</th>
+            <th class="p-3.5 font-semibold text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#E5DCD0]">
+          {% for u in users %}
+            <tr class="hover:bg-[#FAF6F0]">
+              <td class="p-3.5">
+                <div class="font-bold text-[#221C18]">{{ u.get_full_name|default:u.username }}</div>
+                <div class="text-[11px] text-[#6B6156]">{{ u.email }} (@{{ u.username }})</div>
+              </td>
+              <td class="p-3.5">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold
+                  {% if u.role in 'restaurant,restaurateur' %}bg-[#382618] text-[#E8A14C]
+                  {% elif u.role in 'driver,livreur' %}bg-[#1C3325] text-[#71C58E]
+                  {% elif u.role == 'admin' %}bg-[#3A1E1E] text-[#F39C9C]
+                  {% else %}bg-[#F4ECE1] text-[#6B6156]{% endif %}">
+                  {{ u.get_role_display }}
+                </span>
+              </td>
+              <td class="p-3.5 font-mono text-[#221C18]">{{ u.phone|default:"—" }}</td>
+              <td class="p-3.5">
+                <span class="font-semibold text-[#221C18]">{{ u.city }}</span>
+                {% if u.neighborhood %} • {{ u.neighborhood }}{% endif %}
+              </td>
+              <td class="p-3.5">
+                {% if u.must_change_password %}
+                  <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FEF6EB] text-[#8C5311] border border-[#F5D5A5]">
+                    Mot de passe temporaire
+                  </span>
+                {% else %}
+                  <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#EBF4EE] text-[#234E32] border border-[#C1DEC8]">
+                    Vérifié
+                  </span>
+                {% endif %}
+              </td>
+              <td class="p-3.5 text-[#6B6156]">{{ u.date_joined|date:"d/m/Y" }}</td>
+              <td class="p-3.5 text-right">
+                <div class="inline-flex items-center gap-2">
+                  <!-- Activer / Désactiver -->
+                  {% if u != request.user %}
+                    <form method="POST" action="{% url 'dashboard:admin_toggle_user_active' u.id %}" class="inline">
+                      {% csrf_token %}
+                      <button type="submit" class="text-[11px] px-2 py-1 rounded border {% if u.is_active %}border-[#C9BBA9] text-[#6B6156] hover:bg-[#F4ECE1]{% else %}border-[#274D36] text-[#274D36] bg-[#EBF4EE]{% endif %}">
+                        {% if u.is_active %}Désactiver{% else %}Activer{% endif %}
+                      </button>
+                    </form>
+                    <!-- Supprimer -->
+                    <form method="POST" action="{% url 'dashboard:admin_delete_user' u.id %}" class="inline" onsubmit="return confirm('Confirmer la suppression du compte {{ u.username }} ?');">
+                      {% csrf_token %}
+                      <button type="submit" class="text-[11px] px-2 py-1 rounded border border-[#F4C4B4] text-[#8B1B1B] hover:bg-[#FDF0EB]">
+                        Supprimer
+                      </button>
+                    </form>
+                  {% else %}
+                    <span class="text-[11px] text-[#6B6156] italic">Votre compte</span>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="p-8 text-center text-xs text-[#6B6156]">
+                Aucun compte utilisateur ne correspond à ce filtre.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,504 @@
+{% load static resto_tags %}
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ app_name|default:"Le Gout" }}{% endblock %} — Restaurant de Gastronomie Camerounaise Authentique</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS & JS pour cartes de suivi réelles -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Theme CSS -->
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-full flex flex-col bg-[#FAF6F0] text-[#221C18]">
+
+  <!-- Top Announcement Bar : Horaires & Frais de livraison du restaurant -->
+  <div class="bg-[#241E1A] text-[#E0D5C7] text-xs py-2 px-4 text-center font-medium border-b border-[#3D332B] flex items-center justify-center gap-4 flex-wrap">
+    <span>Cuisine ouverte de {{ singleton_restaurant.opening_time|default:"10:30" }} à {{ singleton_restaurant.closing_time|default:"22:30" }}</span>
+    <span class="text-[#A83B19]">•</span>
+    <span>Livraison express à Douala ({{ singleton_restaurant.estimated_delivery_time|default:"35 - 50 min" }}) — Forfait : {{ singleton_restaurant.delivery_fee|default:1000|fcfa }}</span>
+    <span class="text-[#A83B19]">•</span>
+    <span class="text-[#C27A23]">Commandes directes : {{ singleton_restaurant.phone|default:"+237 690 12 34 56" }}</span>
+  </div>
+
+  <!-- Header Navigation Restaurant -->
+  <header class="bg-[#FFFFFF] border-b border-[#E5DCD0] sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20 gap-4">
+        
+        <!-- Logo & Identité Restaurant -->
+        <a href="{% url 'core:home' %}" class="flex items-center gap-2.5 sm:gap-3 text-decoration-none group">
+          <img src="{% static 'images/logo.jpg' %}" alt="Logo Le Gout" class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain border border-[#E5DCD0]/70 shadow-sm flex-shrink-0 transition-transform group-hover:scale-105">
+          <div>
+            <div class="font-serif font-bold text-xl sm:text-2xl text-[#221C18] leading-tight tracking-tight">
+              Le Gout
+            </div>
+          </div>
+        </a>
+
+        <!-- Liens centraux : Menu, Boissons, Notre charte, Horaires -->
+        <nav class="hidden md:flex items-center gap-5 lg:gap-6 text-sm font-semibold text-[#221C18]">
+          <a href="{% url 'core:home' %}#menu" class="flex items-center gap-1.5 hover:text-[#A83B19] transition-colors">
+            <svg class="w-4 h-4 text-[#A83B19]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 0a8 8 0 018 8v1H4v-1a8 8 0 018-8zm-8 11h16a2 2 0 012 2H2a2 2 0 012-2z"/>
+            </svg>
+            <span>Menu</span>
+          </a>
+          <a href="{% url 'core:home' %}#boissons" class="flex items-center gap-1.5 hover:text-[#A83B19] transition-colors">
+            <svg class="w-4 h-4 text-[#A83B19]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 8h2a3 3 0 01-3 3h-1m-10 0H5a3 3 0 01-3-3h2m0 0V5a2 2 0 012-2h12a2 2 0 012 2v6a5 5 0 01-5 5H9a5 5 0 01-5-5zM6 19h12"/>
+            </svg>
+            <span>Boissons</span>
+          </a>
+          <a href="{% url 'core:home' %}#terroir" class="flex items-center gap-1.5 hover:text-[#A83B19] transition-colors">
+            <svg class="w-4 h-4 text-[#A83B19]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            <span>Notre charte</span>
+          </a>
+          <a href="{% url 'core:home' %}#contact" class="flex items-center gap-1.5 hover:text-[#A83B19] transition-colors">
+            <svg class="w-4 h-4 text-[#A83B19]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>Horaires</span>
+          </a>
+        </nav>
+
+        <!-- Actions Droite : Solde, Panier & Compte -->
+        <div class="flex items-center gap-3 sm:gap-4">
+
+          <!-- Solde Portefeuille Simulé (pour les clients connectés) -->
+          {% if user.is_authenticated and user.role == 'client' %}
+            <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-[#FAF6F0] border border-[#A83B19]/30 rounded-md text-xs font-semibold text-[#A83B19]" title="Bonus de bienvenue simulé">
+              <span class="font-bold">Solde :</span>
+              <span class="font-mono">{{ user.wallet_balance|default:0|fcfa }}</span>
+            </div>
+          {% endif %}
+
+          <!-- Bouton Panier -->
+          <a href="{% url 'orders:cart' %}" class="relative p-2 text-[#221C18] hover:text-[#A83B19] border border-[#E5DCD0] rounded-md bg-[#FAF6F0] flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#221C18]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+            <span class="text-xs font-bold font-mono">{{ cart_subtotal|default:0|fcfa }}</span>
+            {% if cart_item_count > 0 %}
+              <span class="absolute -top-2 -right-2 bg-[#A83B19] text-[#FFFFFF] text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border border-[#FFFFFF]">
+                {{ cart_item_count }}
+              </span>
+            {% endif %}
+          </a>
+
+          <!-- Menu Utilisateur / Connexion -->
+          {% if user.is_authenticated %}
+            <div class="relative group">
+              <button class="flex items-center gap-2 text-sm font-semibold text-[#221C18] border border-[#E5DCD0] rounded-md px-3 py-1.5 bg-[#FFFFFF] hover:bg-[#FAF6F0]">
+                <span class="w-6 h-6 rounded-full bg-[#A83B19] text-[#FFFFFF] text-xs flex items-center justify-center font-bold">
+                  {{ user.first_name|default:user.username|slice:":1"|upper }}
+                </span>
+                <span class="max-w-[110px] truncate hidden sm:inline">{{ user.first_name|default:user.username }}</span>
+                <svg class="w-4 h-4 text-[#4A3E36]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              
+              <!-- Dropdown Menu -->
+              <div class="absolute right-0 mt-1 w-56 bg-[#FFFFFF] border border-[#E5DCD0] rounded-md shadow-md py-1 hidden group-hover:block z-50">
+                <div class="px-4 py-2 border-b border-[#E5DCD0] bg-[#FAF6F0]">
+                  <p class="text-xs text-[#4A3E36]">Connecté en tant que</p>
+                  <p class="text-sm font-bold text-[#221C18] truncate">{{ user.get_full_name|default:user.username }}</p>
+                  <span class="inline-block mt-0.5 text-xs font-bold uppercase tracking-wider text-[#A83B19]">{{ user.get_role_display }}</span>
+                  {% if user.role == 'client' %}
+                    <div class="mt-1 text-xs font-semibold text-[#A83B19]">
+                      Solde : {{ user.wallet_balance|default:0|fcfa }}
+                    </div>
+                  {% endif %}
+                </div>
+                
+                {% if user.is_superuser or user.role == 'admin' %}
+                  <a href="{% url 'dashboard:admin' %}" class="block px-4 py-2 text-sm font-semibold text-[#A83B19] bg-[#FDF0EB] hover:bg-[#F9E2DA]">
+                    Tableau de Bord Administrateur
+                  </a>
+                  <a href="/admin/" target="_blank" class="block px-4 py-1.5 text-xs text-[#4A3E36] hover:bg-[#FAF6F0] flex items-center justify-between">
+                    <span>Administration Django</span>
+                    <span class="text-[10px] text-[#A83B19] font-bold">BDD &rarr;</span>
+                  </a>
+                {% elif user.role != 'client' %}
+                  <a href="{% url 'dashboard:dispatch' %}" class="block px-4 py-2 text-sm font-semibold text-[#A83B19] bg-[#FDF0EB] hover:bg-[#F9E2DA]">
+                    Mon Tableau de Bord Pro
+                  </a>
+                {% endif %}
+
+                <a href="{% url 'orders:history' %}" class="block px-4 py-2 text-sm text-[#221C18] hover:bg-[#FAF6F0]">
+                  Mes Commandes & Suivis
+                </a>
+                <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-sm text-[#221C18] hover:bg-[#FAF6F0]">
+                  Mon Profil & Adresses
+                </a>
+                
+                <div class="border-t border-[#E5DCD0]"></div>
+                <form method="POST" action="{% url 'accounts:logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="w-full text-left px-4 py-2 text-sm text-[#8B1B1B] hover:bg-[#FAF6F0]">
+                    Se déconnecter
+                  </button>
+                </form>
+              </div>
+            </div>
+          {% else %}
+            <a href="{% url 'accounts:login' %}" class="text-sm font-semibold text-[#221C18] hover:text-[#A83B19] px-3 py-1.5 border border-[#E5DCD0] rounded-md bg-[#FAF6F0]">
+              Connexion
+            </a>
+            <a href="{% url 'accounts:register' %}" class="btn-terracotta text-xs font-semibold py-1.5 px-3">
+              Inscription
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+      {% for message in messages %}
+        <div class="p-3 mb-2 rounded-md text-sm border flex items-center justify-between
+          {% if message.tags == 'error' %}bg-[#FDF0EB] border-[#F4C4B4] text-[#8B1B1B]
+          {% elif message.tags == 'success' %}bg-[#EBF4EE] border-[#C1DEC8] text-[#234E32]
+          {% else %}bg-[#FEF6EB] border-[#F5D5A5] text-[#8C5311]{% endif %}">
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Contenu Principal -->
+  <main class="flex-grow">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer Authentique Mono-Restaurant -->
+  <footer class="bg-[#221C18] text-[#D6CBC0] border-t border-[#38302A] mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        
+        <!-- Col 1: Présentation du restaurant -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <img src="{% static 'images/logo.jpg' %}" alt="Logo Le Gout" class="w-12 h-12 rounded-xl object-contain bg-white p-0.5 shadow-sm flex-shrink-0">
+            <div>
+              <div class="font-serif font-bold text-lg text-[#FAF6F0]">
+                {{ singleton_restaurant.name|default:"Le Gout" }}
+              </div>
+              <p class="text-[11px] text-[#A89E92]">Le goût de nos racines</p>
+            </div>
+          </div>
+          <p class="text-xs text-[#D6CBC0] leading-relaxed">
+            {{ singleton_restaurant.description|default:"Établissement culinaire traditionnel dédié aux recettes authentiques des terroirs camerounais. Plats préparés avec amour et produits frais du pays." }}
+          </p>
+          <div class="text-xs text-[#E8A14C] font-semibold">
+            {{ singleton_restaurant.address|default:"Boulevard de la Liberté, Akwa, Douala" }}
+          </div>
+        </div>
+
+        <!-- Col 2: Horaires & Zone de livraison -->
+        <div>
+          <h4 class="font-serif font-bold text-sm text-[#FAF6F0] uppercase tracking-wider mb-4 border-b border-[#38302A] pb-2">
+            Horaires & Livraison
+          </h4>
+          <ul class="text-xs space-y-2 text-[#D6CBC0]">
+            <li><strong class="text-[#FAF6F0]">Service cuisine :</strong> {{ singleton_restaurant.opening_time|default:"10:30" }} - {{ singleton_restaurant.closing_time|default:"22:30" }} (7j/7)</li>
+            <li><strong class="text-[#FAF6F0]">Zone couverte :</strong> {{ singleton_restaurant.delivery_zone|default:"Douala : Akwa, Bonapriso, Deido, Bonamoussadi, Bali, Bépanda, Makepe" }}</li>
+            <li><strong class="text-[#FAF6F0]">Frais forfaitaires :</strong> {{ singleton_restaurant.delivery_fee|default:1000|fcfa }}</li>
+            <li class="pt-2 text-[#E8A14C] font-medium">Délai moyen de livraison : {{ singleton_restaurant.estimated_delivery_time|default:"35 - 50 min" }}</li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Navigation rapide & Espaces -->
+        <div>
+          <h4 class="font-serif font-bold text-sm text-[#FAF6F0] uppercase tracking-wider mb-4 border-b border-[#38302A] pb-2">
+            Accès Rapide
+          </h4>
+          <ul class="text-xs space-y-2">
+            <li><a href="{% url 'core:home' %}#menu" class="hover:text-[#FFFFFF] text-[#D6CBC0] transition-colors">Consulter la carte complète</a></li>
+            <li><a href="{% url 'orders:cart' %}" class="hover:text-[#FFFFFF] text-[#D6CBC0] transition-colors">Mon Panier de commande</a></li>
+            <li><button type="button" onclick="toggleChatbotModal(true)" class="hover:text-[#FFFFFF] text-[#E8A14C] text-left transition-colors font-medium">Conseiller culinaire en direct</button></li>
+            <li class="pt-2"><a href="{% url 'accounts:login' %}" class="hover:text-[#FFFFFF] text-[#D6CBC0] transition-colors">Connexion Restaurateur & Livreur</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Paiements & Légal -->
+        <div>
+          <h4 class="font-serif font-bold text-sm text-[#FAF6F0] uppercase tracking-wider mb-4 border-b border-[#38302A] pb-2">
+            Paiements & Cadre Légal
+          </h4>
+          <div class="text-xs text-[#D6CBC0] space-y-2">
+            <p>Paiements mobiles acceptés :</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="bg-[#2E2520] px-2.5 py-1 rounded border border-[#443830] text-[#E8A14C] font-semibold text-xs">MTN MoMo</span>
+              <span class="bg-[#2E2520] px-2.5 py-1 rounded border border-[#443830] text-[#FF7900] font-semibold text-xs">Orange Money</span>
+              <span class="bg-[#2E2520] px-2.5 py-1 rounded border border-[#443830] text-[#FFFFFF] font-semibold text-xs">Espèces à la remise</span>
+            </div>
+            <div class="pt-3 space-y-1">
+              <div><a href="{% url 'core:cgu' %}" class="text-xs text-[#D6CBC0] hover:text-[#FAF6F0] underline">Conditions Générales de Vente (CGU)</a></div>
+              <div><a href="{% url 'core:privacy' %}" class="text-xs text-[#D6CBC0] hover:text-[#FAF6F0] underline">Politique de Confidentialité</a></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="border-t border-[#38302A] mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#A89E92]">
+        <p>&copy; 2026 {{ singleton_restaurant.name|default:"Le Gout" }}. Tous droits réservés.</p>
+        <p class="mt-2 sm:mt-0">Cuisine camerounaise authentique • Préparée à la commande.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Chatbot Widget Button -->
+  <aside aria-label="Assistant culinaire" class="fixed bottom-6 right-6 z-40">
+    <button type="button" onclick="toggleChatbotModal()" id="chatbot-toggle-btn"
+            class="bg-[#A83B19] hover:bg-[#842A0D] text-[#FFFFFF] p-3.5 rounded-full shadow-xl border border-[#842A0D] flex items-center justify-center transition-all hover:scale-105 active:scale-95 focus:outline-none"
+            title="Ouvrir le conseiller culinaire" aria-expanded="false" aria-controls="chatbot-modal">
+      <svg id="chatbot-btn-open-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+      </svg>
+      <svg id="chatbot-btn-close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </aside>
+
+  <!-- Floating Chatbot Modal Window (Compact, Non-redirecting) -->
+  <div id="chatbot-modal" class="fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[380px] max-h-[520px] h-[500px] bg-[#FFFFFF] rounded-2xl shadow-2xl border border-[#E5DCD0] hidden flex-col overflow-hidden transition-all duration-200">
+    <!-- Modal Header -->
+    <div class="bg-[#241E1A] text-[#FAF6F0] p-4 flex items-center justify-between border-b border-[#3D332B] flex-shrink-0">
+      <div class="flex items-center gap-2.5">
+        <img src="{% static 'images/logo.jpg' %}" alt="Logo Le Gout" class="w-9 h-9 rounded-full object-contain bg-white p-0.5 border border-[#842A0D] flex-shrink-0">
+        <div>
+          <div class="font-serif font-bold text-sm text-[#FAF6F0] leading-tight">Conseiller Culinaire</div>
+          <div class="text-xs text-[#274D36] flex items-center gap-1.5 mt-0.5">
+            <span class="w-2 h-2 rounded-full bg-[#34D399] animate-pulse"></span>
+            <span class="text-[#E0D5C7]">Le Gout • En ligne</span>
+          </div>
+        </div>
+      </div>
+      <button type="button" onclick="toggleChatbotModal(false)" class="text-[#A89E92] hover:text-[#FFFFFF] p-1.5 rounded-lg hover:bg-[#38302A] transition" title="Fermer la discussion" aria-label="Fermer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Messages Container -->
+    <div id="chatbot-messages" class="flex-1 p-3.5 overflow-y-auto space-y-3 bg-[#FAF6F0]">
+      <!-- Welcome message -->
+      <div class="flex items-start gap-2.5">
+        <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-7 h-7 rounded-full object-contain bg-white p-0.5 border border-[#E5DCD0] flex-shrink-0 mt-0.5">
+        <div class="bg-[#FFFFFF] border border-[#E5DCD0] p-3 rounded-xl rounded-tl-none text-xs text-[#221C18] leading-relaxed shadow-sm max-w-[85%]">
+          <p class="font-semibold text-[#A83B19]">Bienvenue chez Le Gout !</p>
+          <p class="mt-1">Que souhaitez-vous déguster aujourd'hui ? Ndolè royal, poisson braisé, koki, jus de foléré...</p>
+          <p class="mt-1 text-[#4A3E36]">Vous pouvez aussi renseigner votre numéro de commande pour connaître son état en direct.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Prompts Chips -->
+    <div class="px-3 py-2 bg-[#FFFFFF] border-t border-[#E5DCD0] overflow-x-auto flex items-center gap-1.5 flex-shrink-0 text-xs">
+      <button type="button" onclick="sendModalPrompt('Ndolè')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-[#FAF6F0] hover:bg-[#E5DCD0] border border-[#E5DCD0] text-[#221C18] text-xs transition">
+        Ndolè
+      </button>
+      <button type="button" onclick="sendModalPrompt('Poisson braisé')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-[#FAF6F0] hover:bg-[#E5DCD0] border border-[#E5DCD0] text-[#221C18] text-xs transition">
+        Poisson braisé
+      </button>
+      <button type="button" onclick="sendModalPrompt('Plat sans piment')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-[#FAF6F0] hover:bg-[#E5DCD0] border border-[#E5DCD0] text-[#221C18] text-xs transition">
+        Sans piment
+      </button>
+      <button type="button" onclick="sendModalPrompt('Où en est ma commande ?')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-[#FDF0EB] hover:bg-[#F9E2DA] border border-[#F4C4B4] text-[#A83B19] font-medium text-xs transition">
+        Suivi commande
+      </button>
+    </div>
+
+    <!-- Chat Input Form -->
+    <div class="p-3 bg-[#FFFFFF] border-t border-[#E5DCD0] flex-shrink-0">
+      <form id="chatbot-modal-form" onsubmit="handleModalChatSubmit(event)" class="flex items-center gap-2">
+        <input type="text" id="chatbot-modal-input" placeholder="Posez votre question culinaire..." required
+               class="flex-1 bg-[#FAF6F0] border border-[#C9BBA9] rounded-lg px-3 py-2 text-xs text-[#221C18] focus:outline-none focus:border-[#A83B19]">
+        <button type="submit" class="bg-[#A83B19] hover:bg-[#842A0D] text-[#FFFFFF] p-2 rounded-lg transition flex items-center justify-center flex-shrink-0" title="Envoyer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  function toggleChatbotModal(forceState) {
+    const modal = document.getElementById('chatbot-modal');
+    const btn = document.getElementById('chatbot-toggle-btn');
+    const openIcon = document.getElementById('chatbot-btn-open-icon');
+    const closeIcon = document.getElementById('chatbot-btn-close-icon');
+    if (!modal) return;
+
+    const isOpen = !modal.classList.contains('hidden');
+    const nextState = (typeof forceState === 'boolean') ? forceState : !isOpen;
+
+    if (nextState) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+      if (openIcon) openIcon.classList.add('hidden');
+      if (closeIcon) closeIcon.classList.remove('hidden');
+      const input = document.getElementById('chatbot-modal-input');
+      if (input) setTimeout(function() { input.focus(); }, 120);
+    } else {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+      if (openIcon) openIcon.classList.remove('hidden');
+      if (closeIcon) closeIcon.classList.add('hidden');
+    }
+  }
+
+  function sendModalPrompt(text) {
+    const input = document.getElementById('chatbot-modal-input');
+    if (input) {
+      input.value = text;
+      const form = document.getElementById('chatbot-modal-form');
+      if (form) form.dispatchEvent(new Event('submit'));
+    }
+  }
+
+  function handleModalChatSubmit(e) {
+    e.preventDefault();
+    const input = document.getElementById('chatbot-modal-input');
+    const message = input.value.trim();
+    if (!message) return;
+
+    const container = document.getElementById('chatbot-messages');
+    
+    // User bubble
+    const userDiv = document.createElement('div');
+    userDiv.className = 'flex items-start justify-end gap-2.5';
+    userDiv.innerHTML = `
+      <div class="bg-[#241E1A] text-[#FAF6F0] p-3 rounded-xl rounded-tr-none text-xs leading-relaxed max-w-[85%]">
+        ${escapeChatHtml(message)}
+      </div>
+    `;
+    container.appendChild(userDiv);
+    input.value = '';
+    container.scrollTop = container.scrollHeight;
+
+    // Typing indicator
+    const indicator = document.createElement('div');
+    indicator.id = 'modal-typing-indicator';
+    indicator.className = 'flex items-start gap-2.5';
+    indicator.innerHTML = `
+      <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-7 h-7 rounded-full object-contain bg-white p-0.5 border border-[#E5DCD0] flex-shrink-0 mt-0.5">
+      <div class="bg-[#FFFFFF] border border-[#E5DCD0] p-2.5 rounded-xl rounded-tl-none text-xs text-[#4A3E36] italic">
+        Recherche en cuisine...
+      </div>
+    `;
+    container.appendChild(indicator);
+    container.scrollTop = container.scrollHeight;
+
+    // Fetch API
+    fetch("{% url 'chatbot:api_message' %}", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      const ind = document.getElementById('modal-typing-indicator');
+      if (ind) ind.remove();
+
+      let linkHtml = '';
+      if (data.link && data.link_text) {
+        linkHtml = `<div class="mt-2 pt-2 border-t border-[#E5DCD0]">
+          <a href="${data.link}" class="inline-flex items-center gap-1 text-xs font-bold text-[#A83B19] hover:underline">
+            ${data.link_text} &rarr;
+          </a>
+        </div>`;
+      }
+
+      const replyDiv = document.createElement('div');
+      replyDiv.className = 'flex items-start gap-2.5';
+      replyDiv.innerHTML = `
+        <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-7 h-7 rounded-full object-contain bg-white p-0.5 border border-[#E5DCD0] flex-shrink-0 mt-0.5">
+        <div class="bg-[#FFFFFF] border border-[#E5DCD0] p-3 rounded-xl rounded-tl-none text-xs text-[#221C18] leading-relaxed shadow-sm max-w-[85%]">
+          ${data.reply || ''}
+          ${linkHtml}
+        </div>
+      `;
+      container.appendChild(replyDiv);
+      container.scrollTop = container.scrollHeight;
+    })
+    .catch(function() {
+      const ind = document.getElementById('modal-typing-indicator');
+      if (ind) ind.remove();
+    });
+  }
+
+  function escapeChatHtml(text) {
+    const d = document.createElement('div');
+    d.innerText = text;
+    return d.innerHTML;
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      toggleChatbotModal(false);
+    }
+  });
+
+  // Universal helper to toggle password visibility
+  function togglePasswordVisibility(inputId, isChecked) {
+    const el = document.getElementById(inputId);
+    if (el) {
+      el.type = isChecked ? 'text' : 'password';
+    }
+  }
+
+  // Automatic fallback enhancer for any password field
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[type="password"]').forEach(function(pwdInput, index) {
+      if (pwdInput.dataset.hasToggle) return;
+      if (pwdInput.id && document.querySelector('input[type="checkbox"][onchange*="' + pwdInput.id + '"]')) return;
+
+      if (!pwdInput.id) {
+        pwdInput.id = 'auto_pwd_' + index;
+      }
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'mt-2 flex items-center gap-2';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = 'toggle_auto_' + pwdInput.id;
+      checkbox.className = 'w-4 h-4 text-[#A83B19] bg-[#FAF6F0] border-[#C9BBA9] rounded focus:ring-[#A83B19] cursor-pointer';
+      checkbox.addEventListener('change', function() {
+        pwdInput.type = this.checked ? 'text' : 'password';
+      });
+
+      const label = document.createElement('label');
+      label.htmlFor = checkbox.id;
+      label.className = 'text-xs text-[#6B6156] hover:text-[#221C18] cursor-pointer select-none';
+      label.textContent = 'Afficher le mot de passe';
+
+      wrapper.appendChild(checkbox);
+      wrapper.appendChild(label);
+
+      pwdInput.parentNode.insertBefore(wrapper, pwdInput.nextSibling);
+      pwdInput.dataset.hasToggle = 'true';
+    });
+  });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

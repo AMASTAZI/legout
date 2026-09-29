@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load resto_tags %}
+
+{% block title %}Mon Panier Gourmand — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  
+  <div class="border-b border-[#E5DCD0] pb-4 mb-8 flex items-center justify-between">
+    <div>
+      <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#221C18]">Mon Panier</h1>
+      <p class="text-xs text-[#6B6156] mt-1">Vérifiez vos portions et garnitures avant de passer commande</p>
+    </div>
+    {% if cart_items %}
+      <form method="POST" action="{% url 'orders:clear_cart' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-xs text-[#8B1B1B] hover:underline flex items-center gap-1 font-semibold">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Vider le panier
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if cart_items %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Items Table -->
+      <div class="lg:col-span-8 space-y-4">
+        {% if restaurant %}
+          <div class="p-3 bg-[#FAF6F0] rounded border border-[#E5DCD0] flex items-center justify-between text-xs mb-4">
+            <div>
+              <span class="text-[#6B6156]">Commande préparée chez :</span>
+              <strong class="text-[#221C18] ml-1">{{ restaurant.name }}</strong> ({{ restaurant.neighborhood }}, {{ restaurant.city }})
+            </div>
+            <a href="{% url 'restaurants:detail' restaurant.slug %}" class="text-[#A83B19] font-bold hover:underline">
+              + Ajouter d'autres plats
+            </a>
+          </div>
+        {% endif %}
+
+        <div class="resto-card divide-y divide-[#E5DCD0] overflow-hidden bg-[#FFFFFF]">
+          {% for item in cart_items %}
+            <div class="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div class="flex items-center gap-4">
+                <img src="{{ item.dish.image }}" alt="{{ item.dish.name }}" class="w-16 h-16 rounded object-cover border border-[#E5DCD0] flex-shrink-0">
+                <div>
+                  <h3 class="font-serif font-bold text-sm text-[#221C18]">{{ item.dish.name }}</h3>
+                  <div class="text-[11px] text-[#A83B19] mt-0.5">{{ item.dish.price|fcfa }} / unité</div>
+                  {% if item.side %}
+                    <div class="text-[11px] text-[#274D36] mt-0.5">Garniture : {{ item.side }}</div>
+                  {% endif %}
+                  {% if item.instructions %}
+                    <div class="text-[10px] text-[#6B6156] italic mt-0.5">Note : "{{ item.instructions }}"</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between w-full sm:w-auto gap-6">
+                <!-- Quantity selector -->
+                <div class="flex items-center border border-[#C9BBA9] rounded bg-[#FAF6F0]">
+                  <form method="POST" action="{% url 'orders:update_cart' item.dish.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="decrease">
+                    <button type="submit" class="px-2.5 py-1 text-xs font-bold text-[#221C18] hover:bg-[#E8DDD0]">-</button>
+                  </form>
+                  <span class="px-3 py-1 text-xs font-bold text-[#221C18]">{{ item.quantity }}</span>
+                  <form method="POST" action="{% url 'orders:update_cart' item.dish.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="increase">
+                    <button type="submit" class="px-2.5 py-1 text-xs font-bold text-[#221C18] hover:bg-[#E8DDD0]">+</button>
+                  </form>
+                </div>
+
+                <!-- Subtotal -->
+                <div class="text-right min-w-[90px]">
+                  <span class="font-mono font-bold text-sm text-[#221C18]">{{ item.subtotal|fcfa }}</span>
+                </div>
+
+                <!-- Remove -->
+                <form method="POST" action="{% url 'orders:update_cart' item.dish.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="remove">
+                  <button type="submit" class="text-[#A89E92] hover:text-[#8B1B1B] p-1" title="Supprimer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Order Summary Card -->
+      <div class="lg:col-span-4">
+        <div class="resto-card p-6 bg-[#FFFFFF] space-y-4">
+          <h2 class="font-serif font-bold text-base text-[#221C18] pb-3 border-b border-[#E5DCD0]">
+            Récapitulatif Financier
+          </h2>
+
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between text-[#6B6156]">
+              <span>Sous-total plats :</span>
+              <span class="font-mono font-semibold text-[#221C18]">{{ subtotal|fcfa }}</span>
+            </div>
+            <div class="flex justify-between text-[#6B6156]">
+              <span>Frais de livraison :</span>
+              <span class="font-mono font-semibold text-[#221C18]">{{ delivery_fee|fcfa }}</span>
+            </div>
+            {% if restaurant and subtotal < min_order %}
+              <div class="p-2.5 rounded bg-[#FDF0EB] border border-[#F4C4B4] text-[11px] text-[#8B1B1B] mt-2">
+                Le montant minimum de commande chez {{ restaurant.name }} est de <strong>{{ min_order|fcfa }}</strong>. Veuillez ajouter {{ min_order|add:"-subtotal"|fcfa }} d'articles.
+              </div>
+            {% endif %}
+            <div class="pt-3 border-t border-[#E5DCD0] flex justify-between text-base font-bold text-[#221C18]">
+              <span>Total à régler :</span>
+              <span class="font-mono text-[#A83B19]">{{ total_amount|fcfa }}</span>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            {% if can_checkout %}
+              <a href="{% url 'orders:checkout' %}" class="w-full btn-terracotta text-sm font-semibold py-2.5 justify-center">
+                Passer à la livraison &rarr;
+              </a>
+            {% else %}
+              <button disabled class="w-full bg-[#E5DCD0] text-[#9E9286] font-semibold text-sm py-2.5 rounded cursor-not-allowed">
+                Montant minimum non atteint
+              </button>
+            {% endif %}
+          </div>
+
+          <div class="pt-4 border-t border-[#E5DCD0] text-[11px] text-[#6B6156] space-y-1.5">
+            <div class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 text-[#274D36] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Paiement par MTN MoMo, Orange Money ou Cash</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 text-[#274D36] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Emballage alimentaire hermétique et hygiénique</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 text-[#274D36] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Remise sécurisée par code secret PIN</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  {% else %}
+    <div class="resto-card p-12 text-center bg-[#FFFFFF] max-w-lg mx-auto">
+      <div class="w-16 h-16 bg-[#FAF6F0] rounded-full mx-auto flex items-center justify-center border border-[#E5DCD0] mb-4">
+        <svg class="w-8 h-8 text-[#A89E92]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+        </svg>
+      </div>
+      <h2 class="font-serif font-bold text-lg text-[#221C18]">Votre panier est vide</h2>
+      <p class="text-xs text-[#6B6156] mt-1 max-w-sm mx-auto">
+        Laissez-vous tenter par un succulent Ndolè royal, un poisson braisé au feu de bois ou des brochettes au kankan.
+      </p>
+      <div class="mt-6">
+        <a href="{% url 'restaurants:list' %}" class="btn-terracotta text-xs font-semibold py-2 px-5">
+          Découvrir les plats du terroir
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

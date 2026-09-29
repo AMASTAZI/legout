@@ -1,0 +1,42 @@
+{% extends "admin/login.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var pwdInput = document.getElementById('id_password');
+  if (pwdInput && !document.getElementById('admin_show_password')) {
+    var wrapper = document.createElement('div');
+    wrapper.style.margin = '8px 0 14px 0';
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.gap = '8px';
+
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'admin_show_password';
+    checkbox.style.cursor = 'pointer';
+    checkbox.style.width = '15px';
+    checkbox.style.height = '15px';
+    checkbox.style.accentColor = '#A83B19';
+    checkbox.addEventListener('change', function() {
+      pwdInput.type = this.checked ? 'text' : 'password';
+    });
+
+    var label = document.createElement('label');
+    label.htmlFor = 'admin_show_password';
+    label.innerText = 'Afficher le mot de passe';
+    label.style.cursor = 'pointer';
+    label.style.fontSize = '12px';
+    label.style.color = '#555';
+    label.style.fontWeight = 'normal';
+    label.style.userSelect = 'none';
+
+    wrapper.appendChild(checkbox);
+    wrapper.appendChild(label);
+
+    pwdInput.parentNode.insertBefore(wrapper, pwdInput.nextSibling);
+  }
+});
+</script>
+{% endblock %}

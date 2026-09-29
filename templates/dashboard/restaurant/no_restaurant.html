@@ -1,0 +1,31 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Espace Restaurateur — Aucun établissement{% endblock %}
+{% block header_title %}Tableau de Bord Restaurateur{% endblock %}
+{% block header_subtitle %}Gestion de votre établissement et de votre carte{% endblock %}
+
+{% block nav_resto_overview %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-2xl mx-auto py-12 px-4 text-center">
+  <div class="resto-card p-8 bg-[#FFFFFF]">
+    <div class="w-16 h-16 rounded-full bg-[#FAF6F0] border border-[#E5DCD0] flex items-center justify-center mx-auto mb-4 text-[#A83B19] text-2xl font-serif font-bold">
+      LG
+    </div>
+    <h2 class="font-serif font-bold text-xl text-[#221C18]">Aucun établissement rattaché pour le moment</h2>
+    <p class="text-xs text-[#4A3E36] mt-2 leading-relaxed max-w-md mx-auto">
+      Votre compte utilisateur possède le rôle <strong>Restaurateur</strong>, mais aucun restaurant réel n'est encore associé à votre profil.
+    </p>
+    <div class="mt-6 p-4 rounded bg-[#FAF6F0] border border-[#E5DCD0] text-xs text-[#4A3E36] text-left space-y-2">
+      <div class="font-semibold text-[#221C18]">Prochaines étapes :</div>
+      <p>1. Les administrateurs de la plateforme Le Gout valident et associent les établissements partenaires réels.</p>
+      <p>2. Dès l'association de votre restaurant, vous pourrez administrer votre carte (plats et boissons), suivre vos commandes et gérer vos disponibilités en temps réel.</p>
+    </div>
+    <div class="mt-6">
+      <a href="{% url 'accounts:profile' %}" class="btn-outline-warm text-xs py-2 px-4">
+        Vérifier mon profil
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'dashboard_base.html' %}
+{% load resto_tags %}
+
+{% block title %}Toutes les Commandes Cuisine — {{ restaurant.name }}{% endblock %}
+{% block header_title %}Commandes & Historique Cuisine{% endblock %}
+{% block header_subtitle %}Consultez et filtrez l'ensemble des commandes reçues{% endblock %}
+
+{% block nav_resto_orders %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+
+  <!-- Status Filter Tabs -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-2 text-xs">
+    <a href="{% url 'dashboard:restaurant_orders' %}" 
+       class="px-3 py-1.5 rounded border {% if current_status == 'tous' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+      Toutes les commandes
+    </a>
+    <a href="?status=payee" 
+       class="px-3 py-1.5 rounded border {% if current_status == 'payee' %}bg-[#A83B19] text-[#FAF6F0] border-[#A83B19]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+      Payées (À valider)
+    </a>
+    <a href="?status=validee" 
+       class="px-3 py-1.5 rounded border {% if current_status == 'validee' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+      Validées
+    </a>
+    <a href="?status=en_preparation" 
+       class="px-3 py-1.5 rounded border {% if current_status == 'en_preparation' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+      En préparation
+    </a>
+    <a href="?status=prete" 
+       class="px-3 py-1.5 rounded border {% if current_status == 'prete' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+      Prêtes
+    </a>
+    <a href="?status=livree" 
+       class="px-3 py-1.5 rounded border {% if current_status == 'livree' %}bg-[#241E1A] text-[#FAF6F0] border-[#241E1A]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+      Livrées
+    </a>
+    <a href="?status=refusee" 
+       class="px-3 py-1.5 rounded border {% if current_status == 'refusee' %}bg-[#DC2626] text-white border-[#DC2626]{% else %}bg-[#FFFFFF] text-[#221C18] border-[#E5DCD0]{% endif %}">
+      Refusées / Remboursées
+    </a>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="resto-card bg-[#FFFFFF] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-[#FAF6F0] border-b border-[#E5DCD0] text-[#6B6156]">
+          <tr>
+            <th class="p-3.5 font-semibold">N° Commande</th>
+            <th class="p-3.5 font-semibold">Date & Heure</th>
+            <th class="p-3.5 font-semibold">Client & Contact</th>
+            <th class="p-3.5 font-semibold">Plats commandés</th>
+            <th class="p-3.5 font-semibold">Statut</th>
+            <th class="p-3.5 font-semibold">Total</th>
+            <th class="p-3.5 font-semibold text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#E5DCD0]">
+          {% for order in orders %}
+            <tr class="hover:bg-[#FAF6F0]">
+              <td class="p-3.5 font-serif font-bold text-sm text-[#221C18]">{{ order.order_number }}</td>
+              <td class="p-3.5 text-[#6B6156]">{{ order.created_at|date:"d/m/Y H:i" }}</td>
+              <td class="p-3.5">
+                <div class="font-bold text-[#221C18]">{{ order.client.get_full_name|default:order.client.username }}</div>
+                <div class="text-[11px] text-[#6B6156]">{{ order.delivery_phone }}</div>
+                <div class="text-[10px] text-[#A89E92]">{{ order.delivery_neighborhood }}</div>
+              </td>
+              <td class="p-3.5">
+                {% for item in order.items.all %}
+                  <div>{{ item.quantity }}x {{ item.dish_name }}</div>
+                {% endfor %}
+              </td>
+              <td class="p-3.5">{{ order.status|status_badge }}</td>
+              <td class="p-3.5 font-mono font-bold text-[#221C18]">{{ order.total_amount|fcfa }}</td>
+              <td class="p-3.5 text-right space-y-1">
+                {% if order.status == 'payee' or order.status == 'en_attente' %}
+                  <div class="flex items-center justify-end gap-1 mb-1">
+                    <form method="POST" action="{% url 'dashboard:restaurant_validate_order' order.id %}">
+                      {% csrf_token %}
+                      <button type="submit" title="Valider et transmettre aux livreurs" class="inline-flex items-center gap-1 px-2.5 py-1 bg-[#16A34A] text-white rounded text-[10px] font-bold hover:bg-[#15803D] transition-colors">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Valider</span>
+                      </button>
+                    </form>
+                    <form method="POST" action="{% url 'dashboard:restaurant_refuse_order' order.id %}" onsubmit="return confirm('Confirmer le refus et le remboursement automatique du client ?');">
+                      {% csrf_token %}
+                      <button type="submit" title="Refuser et rembourser" class="inline-flex items-center gap-1 px-2 py-1 bg-white border border-red-200 text-[#DC2626] rounded text-[10px] font-semibold hover:bg-red-50 transition-colors">
+                        <svg class="w-3 h-3 text-[#DC2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>Refuser</span>
+                      </button>
+                    </form>
+                  </div>
+                {% endif %}
+                <a href="{% url 'orders:tracking' order.order_number %}" class="btn-outline-warm text-[10px] py-1 px-2 inline-block">
+                  Détail suivi &rarr;
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="p-8 text-center text-[#6B6156]">Aucune commande trouvée pour ce filtre.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

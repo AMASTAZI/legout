@@ -1,0 +1,428 @@
+{% extends 'base_public.html' %}
+{% load static resto_tags %}
+
+{% block title %}Accueil & Menu — {{ singleton_restaurant.name|default:"Le Gout" }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section : Identité du Restaurant Camerounais Authentique -->
+<section class="border-b border-[#E5DCD0] bg-[#F4ECE1] relative">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+      
+      <!-- Texte de présentation du restaurant -->
+      <div class="lg:col-span-7 space-y-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#E8DDD0] border border-[#C9BBA9] text-xs font-semibold uppercase tracking-wider text-[#A83B19]">
+          Cuisine Traditionnelle • Terroirs Sawa, Grassfields, Beti & Sahel
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <img src="{% static 'images/logo.jpg' %}" alt="Logo Le Gout" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-contain bg-white border border-[#C9BBA9] p-1.5 shadow-sm flex-shrink-0">
+          <div>
+            <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#221C18] leading-[1.15]">
+              {{ singleton_restaurant.name|default:"Le Gout" }}
+            </h1>
+          </div>
+        </div>
+        
+        <p class="font-serif text-lg text-[#A83B19] italic font-medium">
+          {{ singleton_restaurant.tagline|default:"Les plats authentiques de nos mères et de nos braiseurs, préparés à la commande." }}
+        </p>
+
+        <p class="text-sm text-[#4A3E36] max-w-xl leading-relaxed">
+          {{ singleton_restaurant.description|default:"Véritable Ndolè aux crevettes côtières, poissons braisés marinés au poivre de Penja, Koki pilonné à l'huile vierge, jus naturels et rafraîchissements du pays. Commandez en ligne, dégustez sur place ou faites-vous livrer chaud à domicile." }}
+        </p>
+
+        <!-- Recherche directe dans notre carte -->
+        <form method="GET" action="{% url 'core:home' %}#menu" class="bg-[#FFFFFF] border border-[#C9BBA9] rounded-lg p-2 flex flex-col sm:flex-row gap-2 max-w-xl">
+          <div class="flex-1 relative flex items-center">
+            <svg class="w-5 h-5 text-[#4A3E36] ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" name="q" value="{{ search_query|default:'' }}" 
+                   placeholder="Rechercher dans notre carte (ex: Ndolè, Braisé, Koki, Foléré...)" 
+                   class="w-full py-2.5 px-3 text-sm focus:outline-none text-[#221C18] bg-transparent">
+          </div>
+          <button type="submit" class="btn-terracotta py-2.5 px-6 text-sm">
+            Voir sur la carte
+          </button>
+        </form>
+
+        <!-- Garanties de l'établissement -->
+        <div class="pt-2 flex items-center gap-6 text-xs text-[#4A3E36] flex-wrap font-medium">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-[#274D36]"></span>
+            <span>Cuisiné minute au feu</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-[#C27A23]"></span>
+            <span>Livraison ou Retrait sur place</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-[#A83B19]"></span>
+            <span>MoMo & Orange Money</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visuel d'ambiance de l'établissement -->
+      <div class="lg:col-span-5">
+        <div class="border border-[#C9BBA9] rounded-lg p-3 bg-[#FFFFFF]">
+          {% if featured_dishes %}
+            {% with hero_dish=featured_dishes.0 %}
+              <div class="h-72 bg-[#E5DCD0] rounded overflow-hidden relative">
+                {% if hero_dish.image %}
+                  <img src="{{ hero_dish.image }}" alt="{{ hero_dish.name }}" class="w-full h-full object-cover">
+                {% else %}
+                  <div class="w-full h-full flex items-center justify-center bg-[#FAF6F0] p-6">
+                    <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-24 h-24 rounded-2xl object-contain opacity-80">
+                  </div>
+                {% endif %}
+                <span class="absolute top-3 left-3 bg-[#241E1A] text-[#FAF6F0] text-xs font-bold px-2.5 py-1 rounded">
+                  Spécialité du Chef
+                </span>
+              </div>
+              <div class="pt-3 flex items-center justify-between text-xs">
+                <div>
+                  <span class="font-serif font-bold text-sm text-[#221C18] block">{{ hero_dish.name }}</span>
+                  <span class="text-[#4A3E36]">{{ hero_dish.authentic_origin }}</span>
+                </div>
+                <span class="font-mono font-bold text-base text-[#A83B19]">{{ hero_dish.price|fcfa }}</span>
+              </div>
+            {% endwith %}
+          {% else %}
+            <div class="w-full h-72 bg-[#FAF6F0] rounded flex flex-col items-center justify-center p-6 text-center border border-dashed border-[#C9BBA9]">
+              <img src="{% static 'images/logo.jpg' %}" alt="Logo Le Gout" class="w-20 h-20 rounded-2xl object-contain bg-white border border-[#C9BBA9] p-1.5 shadow-sm mb-3">
+              <h2 class="font-serif font-bold text-base text-[#221C18]">{{ singleton_restaurant.name|default:"Le Gout" }}</h2>
+              <p class="text-xs text-[#4A3E36] mt-1.5 max-w-xs">
+                {{ singleton_restaurant.address|default:"Douala, Cameroun" }}
+              </p>
+              <span class="mt-3 inline-block text-xs font-semibold text-[#274D36] bg-[#EBF4EE] px-2.5 py-1 rounded border border-[#C1DEC8]">
+                Ouvert aujourd'hui • Service continu
+              </span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Fiche Infos Pratiques Restaurant (Horaires, Adresse, Frais, Téléphone) -->
+<section id="contact" class="py-6 border-b border-[#E5DCD0] bg-[#FFFFFF]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+      
+      <div class="p-4 rounded bg-[#FAF6F0] border border-[#E5DCD0]">
+        <span class="font-bold text-[#A83B19] uppercase tracking-wider block text-xs">Horaires de service</span>
+        <div class="font-bold text-sm text-[#221C18] mt-1">
+          {{ singleton_restaurant.opening_time|default:"10:30" }} - {{ singleton_restaurant.closing_time|default:"22:30" }}
+        </div>
+        <p class="text-[#4A3E36] mt-1">Ouvert 7 jours sur 7 midi et soir</p>
+      </div>
+
+      <div class="p-4 rounded bg-[#FAF6F0] border border-[#E5DCD0]">
+        <span class="font-bold text-[#A83B19] uppercase tracking-wider block text-xs">Adresse physique</span>
+        <div class="font-bold text-sm text-[#221C18] mt-1 truncate">
+          {{ singleton_restaurant.neighborhood|default:"Akwa" }}, {{ singleton_restaurant.city|default:"Douala" }}
+        </div>
+        <p class="text-[#4A3E36] mt-1 truncate">{{ singleton_restaurant.address|default:"Boulevard de la Liberté" }}</p>
+      </div>
+
+      <div class="p-4 rounded bg-[#FAF6F0] border border-[#E5DCD0]">
+        <span class="font-bold text-[#A83B19] uppercase tracking-wider block text-xs">Livraison & Délais</span>
+        <div class="font-bold text-sm text-[#221C18] mt-1">
+          {{ singleton_restaurant.delivery_fee|default:1000|fcfa }} • {{ singleton_restaurant.estimated_delivery_time|default:"35 - 50 min" }}
+        </div>
+        <p class="text-[#4A3E36] mt-1">Caissons isothermes certifiés</p>
+      </div>
+
+      <div class="p-4 rounded bg-[#FAF6F0] border border-[#E5DCD0]">
+        <span class="font-bold text-[#A83B19] uppercase tracking-wider block text-xs">Ligne directe de commande</span>
+        <div class="font-bold text-sm text-[#221C18] mt-1">
+          {{ singleton_restaurant.phone|default:"+237 690 12 34 56" }}
+        </div>
+        <p class="text-[#4A3E36] mt-1">Appels & WhatsApp disponibles</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 1 : LA CARTE DU RESTAURANT (Plats & Spécialités du Terroir) -->
+<section id="menu" class="py-14 border-b border-[#E5DCD0] bg-[#FAF6F0]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Cuisiné à la marmite & aux braises</span>
+        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#221C18] mt-1">
+          Plats & Spécialités du Terroir
+        </h2>
+        <p class="text-xs text-[#4A3E36] mt-1 font-medium">Tous nos plats sont accompagnés de leurs garnitures traditionnelles.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="#boissons" class="btn-outline-warm text-xs py-2 px-4">
+          Aller aux Boissons du Terroir &darr;
+        </a>
+      </div>
+    </div>
+
+    <!-- Grille des Plats Principaux -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for dish in main_dishes %}
+        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF]">
+          <div>
+            <div class="h-48 bg-[#E5DCD0] relative">
+              {% if dish.image %}
+                <img src="{{ dish.image }}" alt="{{ dish.name }}" class="w-full h-full object-cover">
+              {% else %}
+                <div class="w-full h-full flex items-center justify-center bg-[#F4ECE1] p-4">
+                  <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-16 h-16 rounded-xl object-contain opacity-75">
+                </div>
+              {% endif %}
+              <span class="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded
+                {% if dish.spice_level == 'doux' %}badge-spice-doux
+                {% elif dish.spice_level == 'moyen' %}badge-spice-moyen
+                {% elif dish.spice_level == 'releve' %}badge-spice-releve
+                {% else %}badge-spice-fort{% endif %}">
+                {{ dish.get_spice_level_display }}
+              </span>
+              {% if dish.authentic_origin %}
+                <span class="absolute top-2 right-2 text-xs font-semibold bg-[#241E1A] text-[#FAF6F0] px-2 py-0.5 rounded">
+                  {{ dish.authentic_origin }}
+                </span>
+              {% endif %}
+            </div>
+
+            <div class="p-5">
+              <h3 class="font-serif font-bold text-base text-[#221C18] leading-snug">
+                {{ dish.name }}
+              </h3>
+              <p class="text-xs text-[#4A3E36] mt-2 line-clamp-3 leading-relaxed">
+                {{ dish.description }}
+              </p>
+              {% if dish.sides_included %}
+                <div class="text-xs text-[#274D36] font-medium mt-3 bg-[#EBF4EE] p-2 rounded border border-[#C1DEC8]">
+                  <strong>Garniture :</strong> {{ dish.sides_included }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="px-5 py-3 border-t border-[#E5DCD0] bg-[#FAF6F0] flex items-center justify-between">
+            <span class="font-mono font-bold text-base text-[#221C18]">{{ dish.price|fcfa }}</span>
+            <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-terracotta text-xs py-2 px-4">
+                Ajouter au panier
+              </button>
+            </form>
+          </div>
+        </article>
+      {% empty %}
+        <div class="col-span-full text-center py-12 border border-[#E5DCD0] rounded bg-[#FFFFFF]">
+          <p class="text-sm text-[#4A3E36]">Aucun plat principal disponible pour le moment.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 2 : BOISSONS & RAFRAÎCHISSEMENTS DU TERROIR (Section distincte obligatoire) -->
+<section id="boissons" class="py-14 border-b border-[#E5DCD0] bg-[#FFFFFF]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="mb-8">
+      <span class="text-xs font-bold uppercase tracking-wider text-[#274D36]">Pressé Frais & Recettes Artisanales</span>
+      <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#221C18] mt-1">
+        Boissons & Rafraîchissements du Terroir
+      </h2>
+      <p class="text-xs text-[#4A3E36] mt-1 font-medium">Jus naturels du pays, infusions bien fraîches et boissons artisanales sans conservateurs chimiques.</p>
+    </div>
+
+    <!-- Grille des Boissons -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% for drink in drinks %}
+        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FAF6F0] border-2 border-[#E5DCD0]">
+          <div>
+            <div class="h-44 bg-[#E5DCD0] relative">
+              {% if drink.image %}
+                <img src="{{ drink.image }}" alt="{{ drink.name }}" class="w-full h-full object-cover">
+              {% else %}
+                <div class="w-full h-full flex items-center justify-center bg-[#FAF6F0] p-4">
+                  <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-14 h-14 rounded-xl object-contain opacity-75">
+                </div>
+              {% endif %}
+              <span class="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded bg-[#EBF4EE] text-[#274D36] border border-[#C1DEC8]">
+                Bouteille fraîche
+              </span>
+            </div>
+
+            <div class="p-4">
+              <h3 class="font-serif font-bold text-sm text-[#221C18] leading-snug">
+                {{ drink.name }}
+              </h3>
+              <p class="text-xs text-[#4A3E36] mt-1.5 line-clamp-2 leading-relaxed">
+                {{ drink.description }}
+              </p>
+              {% if drink.sides_included %}
+                <div class="text-xs text-[#4A3E36] font-medium mt-2">
+                  Conditionnement : {{ drink.sides_included }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="p-4 pt-2 border-t border-[#E5DCD0] flex items-center justify-between">
+            <span class="font-mono font-bold text-sm text-[#A83B19]">{{ drink.price|fcfa }}</span>
+            <form method="POST" action="{% url 'orders:add_to_cart' drink.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-ndole text-xs py-1.5 px-3">
+                Ajouter
+              </button>
+            </form>
+          </div>
+        </article>
+      {% empty %}
+        <div class="col-span-full text-center py-10 border border-[#E5DCD0] rounded bg-[#FAF6F0]">
+          <p class="text-xs text-[#4A3E36]">Aucune boisson enregistrée pour le moment.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 3 : ENTRÉES, GRILLADES RAPIDES & DESSERTS -->
+{% if starters or desserts %}
+<section class="py-14 border-b border-[#E5DCD0] bg-[#FAF6F0]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+      <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Gourmandises & Amuse-bouches</span>
+      <h2 class="font-serif text-2xl font-bold text-[#221C18] mt-1">
+        Entrées & Douceurs Sucrées
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% for dish in starters %}
+        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF]">
+          <div class="p-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Entrée</span>
+            <h3 class="font-serif font-bold text-sm text-[#221C18] mt-1">{{ dish.name }}</h3>
+            <p class="text-xs text-[#4A3E36] mt-1 line-clamp-2">{{ dish.description }}</p>
+          </div>
+          <div class="p-4 pt-2 border-t border-[#E5DCD0] flex items-center justify-between">
+            <span class="font-mono font-bold text-xs text-[#221C18]">{{ dish.price|fcfa }}</span>
+            <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-terracotta text-xs py-1 px-2.5">Ajouter</button>
+            </form>
+          </div>
+        </article>
+      {% endfor %}
+
+      {% for dish in desserts %}
+        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF]">
+          <div class="p-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-[#C27A23]">Dessert</span>
+            <h3 class="font-serif font-bold text-sm text-[#221C18] mt-1">{{ dish.name }}</h3>
+            <p class="text-xs text-[#4A3E36] mt-1 line-clamp-2">{{ dish.description }}</p>
+          </div>
+          <div class="p-4 pt-2 border-t border-[#E5DCD0] flex items-center justify-between">
+            <span class="font-mono font-bold text-xs text-[#221C18]">{{ dish.price|fcfa }}</span>
+            <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-terracotta text-xs py-1 px-2.5">Ajouter</button>
+            </form>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- SECTION 4 : NOTRE ENGAGEMENT & CHARTE CULINAIRE TERROIR -->
+<section id="terroir" class="py-14 bg-[#FFFFFF] border-b border-[#E5DCD0]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Tradition & Respect</span>
+      <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#221C18] mt-1">
+        La Charte Culinaire {{ singleton_restaurant.name|default:"Le Gout" }}
+      </h2>
+      <p class="text-xs text-[#4A3E36] mt-2 leading-relaxed">
+        Nous appliquons un cahier des charges rigoureux pour vous offrir la saveur authentique de nos terroirs camerounais.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <div class="border border-[#E5DCD0] p-6 rounded bg-[#FAF6F0]">
+        <div class="font-serif font-bold text-base text-[#221C18] pb-2 border-b border-[#E5DCD0]">
+          Produits Frais du Pays
+        </div>
+        <p class="text-xs text-[#4A3E36] mt-3 leading-relaxed">
+          Feuilles de ndolè fraîches équeutées à la main, arachides de Batouri, huile de palme vierge non blanchie et poissons frais pêchés du jour. Aucun exhausteur de goût artificiel.
+        </p>
+      </div>
+
+      <div class="border border-[#E5DCD0] p-6 rounded bg-[#FAF6F0]">
+        <div class="font-serif font-bold text-base text-[#221C18] pb-2 border-b border-[#E5DCD0]">
+          Cuisson Artisanale au Feu
+        </div>
+        <p class="text-xs text-[#4A3E36] mt-3 leading-relaxed">
+          Nos poissons et viandes sont marinés aux épices naturelles (njangsa, rondelles, poivre blanc de Penja IGP) et braisés au charbon de bois naturel pour un fumé noble et inimitable.
+        </p>
+      </div>
+
+      <div class="border border-[#E5DCD0] p-6 rounded bg-[#FAF6F0]">
+        <div class="font-serif font-bold text-base text-[#221C18] pb-2 border-b border-[#E5DCD0]">
+          Livraison Chaude & Remise Sécurisée
+        </div>
+        <p class="text-xs text-[#4A3E36] mt-3 leading-relaxed">
+          Nos plats sont maintenus à température idéale dans des caissons isothermes. La remise est validée directement avec le client via un code PIN secret à 4 chiffres.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 5 : AVIS CLIENTS CERTIFIÉS -->
+<section class="py-14 bg-[#FAF6F0]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+      <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Expériences Vérifiées</span>
+      <h2 class="font-serif text-2xl font-bold text-[#221C18] mt-1">Avis Clients Contrôlés</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% for rev in recent_reviews %}
+        <div class="border border-[#E5DCD0] bg-[#FFFFFF] p-5 rounded">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <span class="font-bold text-xs text-[#221C18]">{{ rev.client.get_full_name|default:rev.client.username }}</span>
+              <span class="text-xs text-[#274D36] font-semibold bg-[#EBF4EE] px-1.5 py-0.5 rounded border border-[#C1DEC8] ml-2">Commande vérifiée</span>
+            </div>
+            <div class="text-[#C27A23] flex items-center gap-0.5" title="Note : {{ rev.rating }}/5">
+              {% for i in "12345"|slice:rev.rating %}
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              {% endfor %}
+            </div>
+          </div>
+          <p class="text-xs text-[#4A3E36] italic leading-relaxed">
+            "{{ rev.comment }}"
+          </p>
+        </div>
+      {% empty %}
+        <div class="col-span-full text-center py-8 border border-[#E5DCD0] rounded bg-[#FFFFFF]">
+          <p class="text-xs text-[#4A3E36]">Aucun avis pour le moment. Les avis certifiés apparaîtront après les premières commandes livrées.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

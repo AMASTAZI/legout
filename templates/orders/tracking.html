@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load resto_tags %}
+
+{% block title %}Suivi en Temps Réel — Commande #{{ order.order_number }} — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  
+  <!-- Header with Order Info and Live Status -->
+  <div class="border-b border-[#E5DCD0] pb-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Suivi de Commande en Direct</span>
+        <span class="text-xs text-[#6B6156]">•</span>
+        <span class="text-xs text-[#6B6156]">Passée le {{ order.created_at|date:"d/m/Y à H:i" }}</span>
+      </div>
+      <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#221C18] flex items-center gap-3">
+        Commande #{{ order.order_number }}
+        <span id="status-badge">{{ order.status|status_badge }}</span>
+      </h1>
+      <p class="text-xs text-[#6B6156] mt-1">
+        Préparée par <strong class="text-[#221C18]">{{ order.restaurant.name }}</strong> ({{ order.restaurant.neighborhood }}, {{ order.restaurant.city }})
+      </p>
+    </div>
+
+    <!-- Actions / Facture / Reçu PDF / Cancel button if allowed -->
+    <div class="flex flex-wrap items-center gap-2">
+      {% if order.payment_status == 'paid' or order.payment_status == 'refunded' or order.status == 'refusee' or order.invoice %}
+        <a href="{% url 'orders:invoice_detail' order.order_number %}" class="btn-outline-warm text-xs py-1.5 px-3 inline-flex items-center text-[#A83B19] border-[#A83B19]/50 hover:bg-[#FAF6F0]">
+          <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Voir la facture
+        </a>
+        <a href="{% url 'orders:invoice_pdf' order.order_number %}" class="px-3 py-1.5 rounded bg-[#A83B19] hover:bg-[#8F3215] text-white text-xs font-semibold inline-flex items-center transition shadow-sm">
+          <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Télécharger PDF
+        </a>
+      {% endif %}
+      {% if order.can_be_cancelled %}
+        <form method="POST" action="{% url 'orders:cancel' order.order_number %}" onsubmit="return confirm('Êtes-vous certain de vouloir annuler cette commande ?');">
+          {% csrf_token %}
+          <button type="submit" class="px-3 py-1.5 rounded border border-[#F4C4B4] bg-[#FDF0EB] text-[#8B1B1B] text-xs font-semibold hover:bg-[#F9D6CC]">
+            Annuler la commande
+          </button>
+        </form>
+      {% endif %}
+      <a href="tel:{{ order.restaurant.phone }}" class="btn-outline-warm text-xs py-1.5 px-3">
+        Appeler le restaurant
+      </a>
+    </div>
+  </div>
+
+  <!-- Real-time Multi-step Visual Stepper -->
+  <div class="resto-card p-6 bg-[#FFFFFF] mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs font-bold uppercase tracking-wider text-[#221C18]">Progression de la livraison</span>
+      <span id="live-indicator" class="inline-flex items-center gap-1.5 text-xs text-[#274D36] font-semibold">
+        <span class="w-2 h-2 rounded-full bg-[#274D36] animate-pulse"></span>
+        Actualisation en temps réel (GPS connecté)
+      </span>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-full h-2.5 overflow-hidden mb-6">
+      <div id="progress-bar-fill" class="bg-[#A83B19] h-full transition-all duration-500 rounded-full" style="width: {{ order.progress_percentage }}%;"></div>
+    </div>
+
+    <!-- Steps Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs">
+      <div class="p-2 rounded {% if order.status == 'en_attente' %}bg-[#FAF6F0] border border-[#C9BBA9] font-bold text-[#A83B19]{% elif order.status != 'annulee' %}text-[#221C18]{% else %}text-[#9E9286]{% endif %}">
+        <div class="text-base font-bold mb-1">1</div>
+        <div>Transmise au restaurant</div>
+      </div>
+      <div class="p-2 rounded {% if order.status == 'confirmee' %}bg-[#FAF6F0] border border-[#C9BBA9] font-bold text-[#A83B19]{% elif order.status in 'en_preparation prete en_livraison livree' %}text-[#221C18] font-semibold{% else %}text-[#9E9286]{% endif %}">
+        <div class="text-base font-bold mb-1">2</div>
+        <div>Confirmée en cuisine</div>
+      </div>
+      <div class="p-2 rounded {% if order.status == 'en_preparation' %}bg-[#FAF6F0] border border-[#C9BBA9] font-bold text-[#A83B19]{% elif order.status in 'prete en_livraison livree' %}text-[#221C18] font-semibold{% else %}text-[#9E9286]{% endif %}">
+        <div class="text-base font-bold mb-1">3</div>
+        <div>Cuisson sur braises / feu</div>
+      </div>
+      <div class="p-2 rounded {% if order.status in 'prete en_livraison' %}bg-[#FAF6F0] border border-[#C9BBA9] font-bold text-[#A83B19]{% elif order.status == 'livree' %}text-[#221C18] font-semibold{% else %}text-[#9E9286]{% endif %}">
+        <div class="text-base font-bold mb-1">4</div>
+        <div>En cours d'acheminement</div>
+      </div>
+      <div class="p-2 rounded {% if order.status == 'livree' %}bg-[#EBF4EE] border border-[#C1DEC8] font-bold text-[#234E32]{% else %}text-[#9E9286]{% endif %}">
+        <div class="text-base font-bold mb-1">5</div>
+        <div>Livrée & Dégustée</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Map & Order Details -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Column: Interactive GPS Map -->
+    <div class="lg:col-span-7 space-y-6">
+      <div class="resto-card overflow-hidden bg-[#FFFFFF]">
+        <div class="p-4 border-b border-[#E5DCD0] flex items-center justify-between bg-[#FAF6F0]">
+          <div>
+            <h2 class="font-serif font-bold text-sm text-[#221C18]">Itinéraire Restaurant &rarr; Client</h2>
+            <p class="text-[11px] text-[#6B6156]">Localisation précise avec point de repère à {{ order.delivery_city }}</p>
+          </div>
+          {% if delivery %}
+            <span class="text-xs font-semibold text-[#A83B19] bg-[#FFFFFF] px-2.5 py-1 rounded border border-[#C9BBA9]">
+              ~ {{ delivery.estimated_duration_min }} min ({{ delivery.distance_km }} km)
+            </span>
+          {% endif %}
+        </div>
+        
+        <!-- Interactive Leaflet Map Container -->
+        <div id="tracking-map" class="h-80 sm:h-96 w-full z-0 bg-[#E5DCD0]"></div>
+
+        <div class="p-4 bg-[#FFFFFF] border-t border-[#E5DCD0] text-xs text-[#6B6156] flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#A83B19]"></span> Restaurant</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#1A56DB]"></span> Votre Adresse</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#274D36]"></span> Coursier</span>
+          </div>
+          <span class="text-[10px] text-[#9E9286]">Coordonnées GPS Douala & Yaoundé</span>
+        </div>
+      </div>
+
+      <!-- Secret PIN Card: Crucial authentic security feature -->
+      <div class="resto-card p-6 bg-[#FAF6F0] border-2 border-[#C27A23]">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[#A83B19]">Sécurité de la Remise</span>
+            <h3 class="font-serif font-bold text-base text-[#221C18] mt-0.5">Votre Code Secret de Confirmation</h3>
+            <p class="text-xs text-[#6B6156] mt-1 max-w-md">
+              Communiquez ce code à 4 chiffres au coursier uniquement après avoir vérifié le sac isotherme et l'intégrité de vos plats.
+            </p>
+          </div>
+          <div class="bg-[#FFFFFF] border-2 border-[#A83B19] px-6 py-3 rounded text-center shadow-sm">
+            <span class="text-[10px] uppercase font-bold text-[#6B6156] block">Code PIN</span>
+            <span class="font-mono text-3xl font-extrabold text-[#A83B19] tracking-widest">{{ order.delivery_pin }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Courier & Order Breakdown -->
+    <div class="lg:col-span-5 space-y-6">
+      
+      <!-- Courier Info Card -->
+      <div class="resto-card p-5 bg-[#FFFFFF] space-y-3">
+        <h3 class="font-serif font-bold text-sm text-[#221C18] pb-2 border-b border-[#E5DCD0]">
+          Livreur Partenaire Assigné
+        </h3>
+        
+        {% if delivery and delivery.driver %}
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-[#274D36] text-[#FFFFFF] font-bold text-lg flex items-center justify-center border border-[#1A3625]">
+              {{ delivery.driver.first_name|slice:":1"|default:"L" }}
+            </div>
+            <div>
+              <div class="font-bold text-sm text-[#221C18]">{{ delivery.driver.get_full_name|default:delivery.driver.username }}</div>
+              <div class="text-xs text-[#4A3E36]">Coursier certifié Le Gout</div>
+              <div class="text-xs text-[#A83B19] font-medium">{{ delivery.driver.address_details|default:"Moto TVS Star HLX" }}</div>
+            </div>
+          </div>
+          <div class="pt-2">
+            <a href="tel:{{ delivery.driver_phone|default:delivery.driver.phone }}" class="w-full btn-ndole text-xs py-2 justify-center">
+              Appeler le livreur ({{ delivery.driver_phone|default:delivery.driver.phone }})
+            </a>
+          </div>
+        {% else %}
+          <div class="p-3 bg-[#FAF6F0] rounded border border-[#E5DCD0] text-xs text-[#6B6156]">
+            Recherche du coursier le plus proche de l'établissement en cours. Vous recevrez son contact dès qu'il prendra en charge votre commande.
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Delivery Address Recap -->
+      <div class="resto-card p-5 bg-[#FFFFFF] text-xs space-y-2">
+        <h3 class="font-serif font-bold text-sm text-[#221C18] pb-2 border-b border-[#E5DCD0]">
+          Détails de Livraison
+        </h3>
+        <div><strong>Destinataire :</strong> {{ order.client.get_full_name|default:order.client.username }} ({{ order.delivery_phone }})</div>
+        <div><strong>Ville & Quartier :</strong> {{ order.delivery_city }} — {{ order.delivery_neighborhood }}</div>
+        <div><strong>Adresse :</strong> {{ order.delivery_address }}</div>
+        <div class="p-2 bg-[#FAF6F0] rounded border border-[#E5DCD0] text-[#A83B19]">
+          <strong>Point de repère :</strong> {{ order.delivery_landmark }}
+        </div>
+        {% if order.client_notes %}
+          <div class="text-[#6B6156] italic"><strong>Consignes :</strong> "{{ order.client_notes }}"</div>
+        {% endif %}
+      </div>
+
+      <!-- Order Items and Total -->
+      <div class="resto-card p-5 bg-[#FFFFFF] space-y-3">
+        <h3 class="font-serif font-bold text-sm text-[#221C18] pb-2 border-b border-[#E5DCD0]">
+          Contenu de la Commande
+        </h3>
+        
+        <div class="divide-y divide-[#E5DCD0] text-xs max-h-48 overflow-y-auto pr-1">
+          {% for item in order.items.all %}
+            <div class="py-2 flex items-center justify-between">
+              <div>
+                <span class="font-bold text-[#221C18]">{{ item.quantity }}x</span>
+                <span class="ml-1 text-[#221C18]">{{ item.dish_name }}</span>
+                {% if item.selected_side %}
+                  <span class="text-[10px] text-[#6B6156] block ml-4">• {{ item.selected_side }}</span>
+                {% endif %}
+              </div>
+              <span class="font-mono font-semibold text-[#221C18]">{{ item.subtotal|fcfa }}</span>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="pt-2 border-t border-[#E5DCD0] space-y-1 text-xs">
+          <div class="flex justify-between text-[#6B6156]">
+            <span>Sous-total :</span>
+            <span class="font-mono">{{ order.subtotal|fcfa }}</span>
+          </div>
+          <div class="flex justify-between text-[#6B6156]">
+            <span>Frais de livraison :</span>
+            <span class="font-mono">{{ order.delivery_fee|fcfa }}</span>
+          </div>
+          <div class="flex justify-between text-[#6B6156]">
+            <span>Règlement :</span>
+            <span>{{ order.get_payment_method_display }} ({{ order.get_payment_status_display }})</span>
+          </div>
+          <div class="pt-2 border-t border-[#E5DCD0] flex justify-between text-sm font-bold text-[#221C18]">
+            <span>Total payé :</span>
+            <span class="font-mono text-[#A83B19]">{{ order.total_amount|fcfa }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Coordonnées réelles ou simulées de Douala / Yaoundé
+  const restoLat = {{ delivery.pickup_latitude|default:order.restaurant.latitude|stringformat:"f" }};
+  const restoLng = {{ delivery.pickup_longitude|default:order.restaurant.longitude|stringformat:"f" }};
+  const dropLat = {{ delivery.dropoff_latitude|default:order.restaurant.latitude|add:"-0.008"|stringformat:"f" }};
+  const dropLng = {{ delivery.dropoff_longitude|default:order.restaurant.longitude|add:"0.006"|stringformat:"f" }};
+  const driverLat = {{ delivery.current_latitude|default:order.restaurant.latitude|stringformat:"f" }};
+  const driverLng = {{ delivery.current_longitude|default:order.restaurant.longitude|stringformat:"f" }};
+
+  // Initialisation carte Leaflet
+  const map = L.map('tracking-map').setView([driverLat, driverLng], 14);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap - Le Gout Cameroun'
+  }).addTo(map);
+
+  // Marqueurs
+  const restoIcon = L.divIcon({
+    className: 'custom-pin',
+    html: '<div style="background-color:#A83B19;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;font-size:10px;border:1px solid #842A0D;white-space:nowrap;">Restaurant</div>',
+    iconSize: [60, 20]
+  });
+
+  const clientIcon = L.divIcon({
+    className: 'custom-pin',
+    html: '<div style="background-color:#1A56DB;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;font-size:10px;border:1px solid #1E40AF;white-space:nowrap;">Votre adresse</div>',
+    iconSize: [80, 20]
+  });
+
+  const driverIcon = L.divIcon({
+    className: 'custom-pin',
+    html: '<div style="background-color:#274D36;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;font-size:10px;border:1px solid #1A3625;white-space:nowrap;">Moto Coursier</div>',
+    iconSize: [80, 20]
+  });
+
+  L.marker([restoLat, restoLng], {icon: restoIcon}).addTo(map).bindPopup("<strong>{{ order.restaurant.name }}</strong>");
+  L.marker([dropLat, dropLng], {icon: clientIcon}).addTo(map).bindPopup("<strong>Livraison : {{ order.delivery_neighborhood }}</strong>");
+  
+  let driverMarker = L.marker([driverLat, driverLng], {icon: driverIcon}).addTo(map).bindPopup("Coursier en direct");
+
+  // Tracé de l'itinéraire
+  const routeLine = L.polyline([
+    [restoLat, restoLng],
+    [driverLat, driverLng],
+    [dropLat, dropLng]
+  ], {color: '#A83B19', weight: 3, dashArray: '5, 8'}).addTo(map);
+
+  map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
+
+  // Polling AJAX toutes les 5 secondes pour actualiser le statut et les coordonnées
+  const statusApiUrl = "{% url 'orders:status_api' order.order_number %}";
+  
+  function refreshTracking() {
+    fetch(statusApiUrl)
+      .then(res => res.json())
+      .then(data => {
+        if (data.progress_percentage) {
+          document.getElementById('progress-bar-fill').style.width = data.progress_percentage + '%';
+        }
+        if (data.driver_lat && data.driver_lng) {
+          driverMarker.setLatLng([data.driver_lat, data.driver_lng]);
+        }
+      })
+      .catch(err => console.log('Polling sync...', err));
+  }
+
+  setInterval(refreshTracking, 5000);
+});
+</script>
+{% endblock %}

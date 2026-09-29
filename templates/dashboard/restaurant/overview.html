@@ -1,0 +1,172 @@
+{% extends 'dashboard_base.html' %}
+{% load resto_tags %}
+
+{% block title %}Espace Restaurateur — {{ restaurant.name }}{% endblock %}
+{% block header_title %}Tableau de Bord Cuisine — {{ restaurant.name }}{% endblock %}
+{% block header_subtitle %}Supervision des préparations, stocks et commandes en direct à {{ restaurant.city }}{% endblock %}
+
+{% block nav_resto_overview %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+
+  <!-- Restaurant Status & Quick Banner -->
+  <div class="resto-card p-6 bg-[#FFFFFF] border-l-4 border-[#A83B19] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h2 class="font-serif font-bold text-xl text-[#221C18]">{{ restaurant.name }}</h2>
+        {% if restaurant.is_open %}
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[#EBF4EE] text-[#234E32] border border-[#C1DEC8]">
+            Ouvert aux commandes
+          </span>
+        {% else %}
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[#FDF0EB] text-[#8B1B1B] border border-[#F4C4B4]">
+            Fermé
+          </span>
+        {% endif %}
+      </div>
+      <p class="text-xs text-[#6B6156] mt-1">
+        {{ restaurant.address }} • Téléphone : {{ restaurant.phone }} • Frais de livraison : {{ restaurant.delivery_fee|fcfa }}
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="{% url 'restaurants:detail' restaurant.slug %}" target="_blank" class="btn-outline-warm text-xs py-2 px-3">
+        Voir ma vitrine publique &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#6B6156]">Ventes du Jour</span>
+      <div class="font-serif font-bold text-2xl text-[#221C18] mt-1">{{ today_sales|fcfa }}</div>
+      <span class="text-[11px] text-[#274D36] font-medium mt-1 block">Règlements MoMo & Orange Money</span>
+    </div>
+
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#6B6156]">Commandes Aujourd'hui</span>
+      <div class="font-serif font-bold text-2xl text-[#221C18] mt-1">{{ today_orders_count }}</div>
+      <span class="text-[11px] text-[#6B6156] mt-1 block">Volumes traités</span>
+    </div>
+
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#6B6156]">En Attente Cuisine</span>
+      <div class="font-serif font-bold text-2xl text-[#A83B19] mt-1">{{ pending_orders_count }}</div>
+      <span class="text-[11px] text-[#A83B19] font-medium mt-1 block">À préparer immédiatement</span>
+    </div>
+
+    <div class="resto-card p-5 bg-[#FFFFFF]">
+      <span class="text-xs font-semibold text-[#6B6156]">Note & Réputation</span>
+      <div class="font-serif font-bold text-2xl text-[#C27A23] mt-1 flex items-center gap-1.5">
+        <svg class="w-5 h-5 text-[#C27A23] fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        <span>{{ restaurant.rating }}</span>
+      </div>
+      <span class="text-[11px] text-[#6B6156] mt-1 block">{{ restaurant.total_reviews }} avis certifiés</span>
+    </div>
+
+  </div>
+
+  <!-- Live Orders in Kitchen (Fil d'attente cuisine) -->
+  <div class="resto-card bg-[#FFFFFF]">
+    <div class="p-5 border-b border-[#E5DCD0] flex items-center justify-between">
+      <div>
+        <h3 class="font-serif font-bold text-base text-[#221C18]">File d'Attente Cuisine en Direct</h3>
+        <p class="text-xs text-[#6B6156]">Commandes à valider, en cuisson ou prêtes pour le départ du livreur</p>
+      </div>
+      <a href="{% url 'dashboard:restaurant_orders' %}" class="text-xs font-semibold text-[#A83B19] hover:underline">
+        Toutes les commandes &rarr;
+      </a>
+    </div>
+
+    <div class="divide-y divide-[#E5DCD0]">
+      {% for order in active_orders %}
+        <div class="p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
+          
+          <div class="space-y-1.5 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-serif font-bold text-base text-[#221C18]">#{{ order.order_number }}</span>
+              <span>{{ order.status|status_badge }}</span>
+              <span class="text-xs text-[#6B6156]">• Reçue il y a {{ order.created_at|timesince }}</span>
+            </div>
+
+            <div class="text-xs text-[#221C18]">
+              <strong>Client :</strong> {{ order.client.get_full_name|default:order.client.username }} ({{ order.delivery_phone }}) • 
+              <strong>Livraison :</strong> {{ order.delivery_neighborhood }} ({{ order.delivery_landmark }})
+            </div>
+
+            <!-- Items list -->
+            <div class="p-3 bg-[#FAF6F0] rounded border border-[#E5DCD0] text-xs space-y-1 my-2">
+              {% for item in order.items.all %}
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="font-bold text-[#A83B19]">{{ item.quantity }}x</span>
+                    <strong class="text-[#221C18]">{{ item.dish_name }}</strong>
+                    {% if item.selected_side %}<span class="text-[#274D36]"> ({{ item.selected_side }})</span>{% endif %}
+                    {% if item.special_instructions %}<span class="text-[#6B6156] italic"> - "{{ item.special_instructions }}"</span>{% endif %}
+                  </div>
+                  <span class="font-mono text-[#6B6156]">{{ item.subtotal|fcfa }}</span>
+                </div>
+              {% endfor %}
+            </div>
+
+            {% if order.client_notes %}
+              <div class="text-xs text-[#842A0D] bg-[#FDF0EB] p-2 rounded border border-[#F4C4B4]">
+                <strong>Consigne client :</strong> "{{ order.client_notes }}"
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- 1-Click Status Advancer Action Buttons -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-stretch lg:self-auto">
+            {% if order.status == 'payee' or order.status == 'en_attente' %}
+              <form method="POST" action="{% url 'dashboard:restaurant_validate_order' order.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-ndole text-xs py-2 px-4 whitespace-nowrap bg-[#16A34A] hover:bg-[#15803D] text-white font-bold rounded shadow-sm inline-flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                  <span>Valider la commande</span>
+                </button>
+              </form>
+              <form method="POST" action="{% url 'dashboard:restaurant_refuse_order' order.id %}" onsubmit="return confirm('Confirmer le refus de cette commande ? Le client sera immédiatement et intégralement remboursé.');">
+                {% csrf_token %}
+                <button type="submit" class="text-xs py-2 px-3 text-[#DC2626] bg-white border border-red-200 hover:bg-red-50 rounded font-semibold transition inline-flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-[#DC2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                  <span>Refuser & Rembourser</span>
+                </button>
+              </form>
+            {% elif order.status == 'validee' or order.status == 'confirmee' %}
+              <form method="POST" action="{% url 'dashboard:restaurant_order_status' order.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="en_preparation">
+                <button type="submit" class="btn-terracotta text-xs py-2 px-4 whitespace-nowrap">
+                  Mettre en cuisson / préparation
+                </button>
+              </form>
+            {% elif order.status == 'en_preparation' %}
+              <form method="POST" action="{% url 'dashboard:restaurant_order_status' order.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="prete">
+                <button type="submit" class="bg-[#C27A23] hover:bg-[#A66517] text-[#FFFFFF] text-xs font-semibold py-2 px-4 rounded whitespace-nowrap">
+                  Plat prêt / En attente du coursier
+                </button>
+              </form>
+            {% elif order.status == 'prete' %}
+              <span class="text-xs font-semibold text-[#274D36] bg-[#EBF4EE] px-3 py-2 rounded border border-[#C1DEC8] text-center">
+                En attente du coursier
+              </span>
+            {% endif %}
+          </div>
+
+        </div>
+      {% empty %}
+        <div class="p-8 text-center text-xs text-[#6B6156]">
+          Aucune commande en attente actuellement en cuisine. Préparez vos marinades et vos braises !
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

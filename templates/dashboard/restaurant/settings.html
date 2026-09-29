@@ -1,0 +1,122 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Paramètres de l'Établissement — Le Gout{% endblock %}
+{% block header_title %}Configuration de l'Établissement{% endblock %}
+{% block header_subtitle %}Gérez les horaires d'ouverture, coordonnées, frais et périmètre de livraison{% endblock %}
+
+{% block nav_resto_settings %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-3xl mx-auto py-6">
+  <div class="resto-card p-6 sm:p-8 bg-[#FFFFFF]">
+
+    <div class="mb-6 pb-4 border-b border-[#E5DCD0] flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="{% static 'images/logo.jpg' %}" alt="Logo Le Gout" class="w-12 h-12 rounded-xl object-contain border border-[#E5DCD0] p-1 shadow-sm flex-shrink-0">
+        <div>
+          <h2 class="font-serif font-bold text-lg text-[#221C18]">Fiche Officielle du Restaurant</h2>
+          <p class="text-xs text-[#4A3E36] mt-1 font-medium">Ces informations sont visibles publiquement par vos clients sur la vitrine.</p>
+        </div>
+      </div>
+      <a href="{% url 'core:home' %}" target="_blank" class="btn-outline-warm text-xs py-1.5 px-3">
+        Voir la vitrine &rarr;
+      </a>
+    </div>
+
+    <form method="POST" action="{% url 'dashboard:restaurant_settings' %}" class="space-y-4">
+      {% csrf_token %}
+
+      {% if form.errors %}
+        <div class="p-3 rounded bg-[#FDF0EB] border border-[#F4C4B4] text-xs text-[#8B1B1B]">
+          {{ form.errors }}
+        </div>
+      {% endif %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Nom du restaurant</label>
+          {{ form.name }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Slogan culinaire</label>
+          {{ form.tagline }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-[#221C18] mb-1">Présentation de la cuisine</label>
+        {{ form.description }}
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Téléphone de commande</label>
+          {{ form.phone }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Email professionnel</label>
+          {{ form.email }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Ville</label>
+          {{ form.city }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Quartier</label>
+          {{ form.neighborhood }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Adresse précise</label>
+          {{ form.address }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded bg-[#FAF6F0] border border-[#E5DCD0]">
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Heure d'ouverture cuisine</label>
+          {{ form.opening_time }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Heure de fermeture cuisine</label>
+          {{ form.closing_time }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Frais de livraison forfaitaires (FCFA)</label>
+          {{ form.delivery_fee }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Montant minimum de commande (FCFA)</label>
+          {{ form.min_order_amount }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-[#221C18] mb-1">Zone de livraison couverte</label>
+        {{ form.delivery_zone }}
+        <span class="text-[11px] text-[#6B6156] mt-1 block">Ex: Douala (Akwa, Bonapriso, Deido, Bonamoussadi, Bali, Bépanda, Makepe)</span>
+      </div>
+
+      <div class="p-3 rounded bg-[#FAF6F0] border border-[#E5DCD0] flex items-center gap-3">
+        {{ form.is_open }}
+        <label for="id_is_open" class="text-xs font-bold text-[#221C18] cursor-pointer">
+          Restaurant actuellement ouvert aux commandes
+        </label>
+      </div>
+
+      <div class="pt-4 border-t border-[#E5DCD0] flex justify-end">
+        <button type="submit" class="btn-terracotta text-xs py-2.5 px-6 font-semibold">
+          Enregistrer les modifications
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

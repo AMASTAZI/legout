@@ -1,0 +1,101 @@
+{% extends 'dashboard_base.html' %}
+{% load resto_tags %}
+
+{% block title %}Espace Coursier — Courses Disponibles — {{ app_name }}{% endblock %}
+{% block header_title %}Tableau de Bord Livreur{% endblock %}
+{% block header_subtitle %}Prenez en charge les livraisons prêtes et suivez vos courses à moto{% endblock %}
+
+{% block nav_driver_overview %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+
+  <!-- Active Delivery Alert if courier is already on a run -->
+  {% if active_delivery %}
+    <div class="resto-card p-5 bg-[#FAF6F0] border-2 border-[#A83B19] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#A83B19] animate-pulse"></span>
+          <span class="font-serif font-bold text-base text-[#221C18]">Course active en cours : Commande #{{ active_delivery.order.order_number }}</span>
+        </div>
+        <p class="text-xs text-[#6B6156] mt-1">
+          De <strong>{{ active_delivery.order.restaurant.name }}</strong> ({{ active_delivery.order.restaurant.neighborhood }}) vers <strong>{{ active_delivery.order.delivery_neighborhood }}</strong>
+        </p>
+      </div>
+      <a href="{% url 'dashboard:driver_active' %}" class="btn-terracotta text-xs py-2 px-4 whitespace-nowrap">
+        Ouvrir la navigation GPS &rarr;
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- Available Delivery Opportunities -->
+  <div class="resto-card bg-[#FFFFFF]">
+    <div class="p-5 border-b border-[#E5DCD0] flex items-center justify-between">
+      <div>
+        <h3 class="font-serif font-bold text-base text-[#221C18]">Courses Disponibles à Proximité</h3>
+        <p class="text-xs text-[#6B6156]">Attribution immédiate au premier livreur disponible</p>
+      </div>
+      <span class="text-xs font-bold text-[#A83B19]">{{ available_deliveries|length }} disponible(s)</span>
+    </div>
+
+    <div class="divide-y divide-[#E5DCD0]">
+      {% for delivery in available_deliveries %}
+        <div class="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 hover:bg-[#FAF6F0]">
+          
+          <div class="space-y-2 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-serif font-bold text-base text-[#221C18]">#{{ delivery.order.order_number }}</span>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#FEF6EB] text-[#8C5311] border border-[#F5D5A5]">
+                {{ delivery.order.get_status_display }}
+              </span>
+              <span class="text-xs text-[#6B6156]">• Prêt d'ici {{ delivery.estimated_duration_min }} min</span>
+            </div>
+
+            <!-- Route points -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+              <div class="p-2.5 rounded bg-[#FFFFFF] border border-[#E5DCD0]">
+                <span class="text-[10px] font-bold uppercase text-[#A83B19] block">1. Récupération (Restaurant)</span>
+                <strong class="text-[#221C18]">{{ delivery.order.restaurant.name }}</strong>
+                <div class="text-[#6B6156] text-[11px]">{{ delivery.pickup_address }}</div>
+              </div>
+
+              <div class="p-2.5 rounded bg-[#FFFFFF] border border-[#E5DCD0]">
+                <span class="text-[10px] font-bold uppercase text-[#1A56DB] block">2. Dépôt (Client)</span>
+                <strong class="text-[#221C18]">{{ delivery.order.delivery_neighborhood }}</strong>
+                <div class="text-[#6B6156] text-[11px]">{{ delivery.order.delivery_landmark }}</div>
+              </div>
+            </div>
+
+            <div class="text-xs text-[#6B6156] flex items-center gap-4">
+              <span>Distance estimée : <strong>{{ delivery.distance_km }} km</strong></span>
+              <span>Règlement : <strong>{{ delivery.order.get_payment_method_display }}</strong></span>
+            </div>
+          </div>
+
+          <!-- Payout and Accept button -->
+          <div class="flex flex-col sm:items-end justify-between gap-3 self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-[#E5DCD0]">
+            <div class="text-left md:text-right">
+              <span class="text-[10px] text-[#6B6156] block">Gain net livreur</span>
+              <span class="font-mono font-bold text-lg text-[#274D36]">{{ delivery.driver_payout|fcfa }}</span>
+            </div>
+
+            <form method="POST" action="{% url 'dashboard:driver_accept' delivery.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-ndole text-xs py-2 px-5 font-semibold whitespace-nowrap">
+                Accepter cette course
+              </button>
+            </form>
+          </div>
+
+        </div>
+      {% empty %}
+        <div class="p-12 text-center text-xs text-[#6B6156]">
+          <p>Aucune course en attente d'attribution pour le moment dans votre secteur.</p>
+          <p class="mt-1 text-[#A89E92]">Les nouvelles commandes s'afficheront dès validation par les restaurateurs.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

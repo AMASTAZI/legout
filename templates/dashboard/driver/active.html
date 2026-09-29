@@ -1,0 +1,191 @@
+{% extends 'dashboard_base.html' %}
+{% load resto_tags %}
+
+{% block title %}Course en Direct — GPS & Validation — {{ app_name }}{% endblock %}
+{% block header_title %}Navigation Course en Direct{% endblock %}
+{% block header_subtitle %}Acheminement et validation de la remise avec code client{% endblock %}
+
+{% block nav_driver_active %}active{% endblock %}
+
+{% block dashboard_content %}
+{% if delivery %}
+<div class="space-y-6">
+
+  <!-- Top Action Bar with Step Advancement -->
+  <div class="resto-card p-6 bg-[#FFFFFF] border-l-4 border-[#274D36]">
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Mission en cours</span>
+          <span class="text-xs text-[#6B6156]">•</span>
+          <span class="font-serif font-bold text-lg text-[#221C18]">Commande #{{ delivery.order.order_number }}</span>
+        </div>
+        <div class="text-xs text-[#6B6156] mt-1">
+          Statut de la course : <strong class="text-[#221C18]">{{ delivery.get_status_display }}</strong> • Gain prévu : <strong class="text-[#274D36] font-mono">{{ delivery.driver_payout|fcfa }}</strong>
+        </div>
+      </div>
+
+      <!-- Action Buttons based on delivery step -->
+      <div class="flex flex-wrap items-center gap-3">
+        {% if delivery.status == 'assignee' %}
+          <form method="POST" action="{% url 'dashboard:driver_status' delivery.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="at_restaurant">
+            <button type="submit" class="btn-ndole text-xs py-2.5 px-4 font-semibold">
+              1. Je suis arrivé au restaurant
+            </button>
+          </form>
+        {% elif delivery.status == 'arrivee_restaurant' %}
+          <form method="POST" action="{% url 'dashboard:driver_status' delivery.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="picked_up">
+            <button type="submit" class="btn-terracotta text-xs py-2.5 px-4 font-semibold">
+              2. Colis chaud récupéré / En route vers le client
+            </button>
+          </form>
+        {% elif delivery.status == 'recuperee' %}
+          <form method="POST" action="{% url 'dashboard:driver_status' delivery.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="at_client">
+            <button type="submit" class="btn-ndole text-xs py-2.5 px-4 font-semibold">
+              3. Je suis arrivé chez le client
+            </button>
+          </form>
+        {% elif delivery.status == 'arrivee_client' %}
+          <!-- PIN Validation Form -->
+          <form method="POST" action="{% url 'dashboard:driver_status' delivery.id %}" class="flex items-center gap-2 bg-[#FAF6F0] p-2 rounded border border-[#C9BBA9]">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="confirm_pin">
+            <input type="text" name="pin" placeholder="PIN Client (4 chiffres)" required maxlength="4"
+                   class="w-36 bg-[#FFFFFF] border border-[#A83B19] rounded px-3 py-1.5 text-center font-mono font-bold text-sm tracking-widest">
+            <button type="submit" class="btn-terracotta text-xs py-2 px-3 font-semibold">
+              Valider la remise
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Map and Contacts Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Map Leaflet -->
+    <div class="lg:col-span-8">
+      <div class="resto-card overflow-hidden bg-[#FFFFFF]">
+        <div class="p-3.5 bg-[#FAF6F0] border-b border-[#E5DCD0] flex items-center justify-between text-xs">
+          <span class="font-bold text-[#221C18]">Navigation GPS Directe</span>
+          <span class="text-[#6B6156]">Distance : {{ delivery.distance_km }} km</span>
+        </div>
+        <div id="driver-map" class="h-96 w-full z-0 bg-[#E5DCD0]"></div>
+      </div>
+    </div>
+
+    <!-- Contact & Addresses Info -->
+    <div class="lg:col-span-4 space-y-4">
+      
+      <!-- Restaurant Contact Card -->
+      <div class="resto-card p-4 bg-[#FFFFFF] text-xs space-y-2">
+        <span class="text-[10px] font-bold uppercase text-[#A83B19] block">Départ (Restaurant)</span>
+        <div class="font-serif font-bold text-sm text-[#221C18]">{{ delivery.order.restaurant.name }}</div>
+        <div class="text-[#6B6156]">{{ delivery.pickup_address }}</div>
+        <div class="pt-2">
+          <a href="tel:{{ delivery.order.restaurant.phone }}" class="w-full btn-outline-warm text-xs py-1.5 justify-center">
+            Appeler le resto ({{ delivery.order.restaurant.phone }})
+          </a>
+        </div>
+      </div>
+
+      <!-- Client Contact Card -->
+      <div class="resto-card p-4 bg-[#FFFFFF] text-xs space-y-2 border-2 border-[#1A56DB]">
+        <span class="text-[10px] font-bold uppercase text-[#1A56DB] block">Arrivée (Client)</span>
+        <div class="font-serif font-bold text-sm text-[#221C18]">
+          {{ delivery.order.client.get_full_name|default:delivery.order.client.username }}
+        </div>
+        <div class="text-[#221C18] font-semibold">{{ delivery.order.delivery_neighborhood }}</div>
+        <div class="text-[#6B6156]">{{ delivery.order.delivery_address }}</div>
+        <div class="p-2 bg-[#FAF6F0] rounded border border-[#E5DCD0] text-[#A83B19] text-[11px]">
+          <strong>Repère visuel :</strong> {{ delivery.order.delivery_landmark }}
+        </div>
+        <div class="pt-2">
+          <a href="tel:{{ delivery.order.delivery_phone }}" class="w-full btn-ndole text-xs py-1.5 justify-center">
+            Appeler le client ({{ delivery.order.delivery_phone }})
+          </a>
+        </div>
+      </div>
+
+      <!-- Payment Alert -->
+      <div class="p-3 bg-[#FAF6F0] rounded border border-[#E5DCD0] text-xs">
+        <span class="font-bold text-[#221C18] block">Règlement de la commande :</span>
+        <span class="text-[#6B6156]">{{ delivery.order.get_payment_method_display }}</span>
+        {% if delivery.order.payment_method == 'cash_on_delivery' %}
+          <div class="mt-1 p-2 bg-[#FDF0EB] text-[#8B1B1B] font-bold rounded">
+            Encaisser en espèces : {{ delivery.order.total_amount|fcfa }}
+          </div>
+        {% else %}
+          <div class="mt-1 text-[#274D36] font-semibold">
+            Déjà payé en ligne (Ne rien encaisser au client)
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% else %}
+  <div class="resto-card p-12 text-center bg-[#FFFFFF]">
+    <h2 class="font-serif font-bold text-lg text-[#221C18]">Aucune course active pour le moment</h2>
+    <p class="text-xs text-[#6B6156] mt-1">Vous n'avez pas de livraison en cours d'acheminement.</p>
+    <div class="mt-4">
+      <a href="{% url 'dashboard:driver' %}" class="btn-terracotta text-xs py-2 px-4">
+        Voir les courses disponibles
+      </a>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if delivery %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const pickupLat = {{ delivery.pickup_latitude|stringformat:"f" }};
+  const pickupLng = {{ delivery.pickup_longitude|stringformat:"f" }};
+  const dropLat = {{ delivery.dropoff_latitude|stringformat:"f" }};
+  const dropLng = {{ delivery.dropoff_longitude|stringformat:"f" }};
+
+  const map = L.map('driver-map').setView([pickupLat, pickupLng], 14);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  const restoIcon = L.divIcon({
+    className: 'custom-pin',
+    html: '<div style="background-color:#A83B19;color:white;padding:3px 6px;border-radius:4px;font-size:10px;font-weight:bold;">Resto</div>',
+    iconSize: [50, 20]
+  });
+
+  const clientIcon = L.divIcon({
+    className: 'custom-pin',
+    html: '<div style="background-color:#1A56DB;color:white;padding:3px 6px;border-radius:4px;font-size:10px;font-weight:bold;">Client</div>',
+    iconSize: [50, 20]
+  });
+
+  L.marker([pickupLat, pickupLng], {icon: restoIcon}).addTo(map).bindPopup("{{ delivery.order.restaurant.name }}");
+  L.marker([dropLat, dropLng], {icon: clientIcon}).addTo(map).bindPopup("Client : {{ delivery.order.delivery_neighborhood }}");
+
+  const route = L.polyline([[pickupLat, pickupLng], [dropLat, dropLng]], {
+    color: '#274D36',
+    weight: 4,
+    dashArray: '6, 8'
+  }).addTo(map);
+
+  map.fitBounds(route.getBounds(), {padding: [50, 50]});
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Créer un Compte Équipe — Administration Le Gout{% endblock %}
+{% block header_title %}Création de Compte Restaurateur ou Livreur{% endblock %}
+{% block header_subtitle %}L'administrateur attribue un identifiant et un mot de passe temporaire à renouveler à la première connexion{% endblock %}
+
+{% block nav_admin_create_staff %}active{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-2xl mx-auto py-6">
+  <div class="resto-card p-6 sm:p-8 bg-[#FFFFFF]">
+
+    <div class="mb-6 pb-4 border-b border-[#E5DCD0]">
+      <h2 class="font-serif font-bold text-lg text-[#221C18]">Formulaire de Création d'Accès Équipe</h2>
+      <p class="text-xs text-[#4A3E36] mt-1 leading-relaxed">
+        Ce formulaire est exclusivement réservé à l'administrateur. Le compte créé recevra le statut <em>must_change_password</em> et sera contraint de remplacer son mot de passe temporaire dès sa première connexion.
+      </p>
+    </div>
+
+    <form method="POST" action="{% url 'dashboard:admin_create_staff' %}" class="space-y-4">
+      {% csrf_token %}
+
+      {% if form.errors %}
+        <div class="p-3 rounded bg-[#FDF0EB] border border-[#F4C4B4] text-xs text-[#8B1B1B]">
+          {{ form.errors }}
+        </div>
+      {% endif %}
+
+      <div>
+        <label class="block text-xs font-semibold text-[#221C18] mb-1">Rôle attribué</label>
+        {{ form.role }}
+        <span class="text-[11px] text-[#6B6156] block mt-1">Sélectionnez Restaurateur (cuisine & carte) ou Livreur (courses & GPS).</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Identifiant de connexion</label>
+          {{ form.username }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Email professionnel</label>
+          {{ form.email }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Prénom</label>
+          {{ form.first_name }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Nom de famille</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Téléphone de contact (+237)</label>
+          {{ form.phone }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Ville d'exercice</label>
+          {{ form.city }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Quartier de référence</label>
+          {{ form.neighborhood }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-[#221C18] mb-1">Précisions (véhicule moto, repère...)</label>
+          {{ form.address_details }}
+        </div>
+      </div>
+
+      <div class="p-4 rounded bg-[#FAF6F0] border border-[#E5DCD0]">
+        <label for="id_temporary_password" class="block text-xs font-bold text-[#A83B19] mb-1">Mot de passe temporaire</label>
+        {{ form.temporary_password }}
+        <div class="mt-2 flex items-center gap-2">
+          <input type="checkbox" id="show_temporary_password"
+                 class="w-4 h-4 text-[#A83B19] bg-[#FAF6F0] border-[#C9BBA9] rounded focus:ring-[#A83B19] cursor-pointer"
+                 onchange="togglePasswordVisibility('id_temporary_password', this.checked)">
+          <label for="show_temporary_password" class="text-xs text-[#6B6156] hover:text-[#221C18] cursor-pointer select-none">
+            Afficher le mot de passe
+          </label>
+        </div>
+        <p class="text-[11px] text-[#6B6156] mt-1.5">
+          Transmettez ce mot de passe à l'intéressé. À sa première connexion, le système exigera son remplacement immédiat.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-[#E5DCD0] flex items-center justify-between">
+        <a href="{% url 'dashboard:admin_users' %}" class="btn-outline-warm text-xs py-2 px-4">
+          Annuler
+        </a>
+        <button type="submit" class="btn-terracotta text-xs py-2.5 px-6 font-semibold">
+          Créer et enregistrer le compte
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
