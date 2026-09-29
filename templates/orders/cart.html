@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load resto_tags %}
 
-{% block title %}Mon Panier Gourmand — {{ app_name }}{% endblock %}
+{% block title %}Mon Panier — {{ app_name|default:"Le Gout" }}{% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -107,11 +107,6 @@
               <span>Frais de livraison :</span>
               <span class="font-mono font-semibold text-[#221C18]">{{ delivery_fee|fcfa }}</span>
             </div>
-            {% if restaurant and subtotal < min_order %}
-              <div class="p-2.5 rounded bg-[#FDF0EB] border border-[#F4C4B4] text-[11px] text-[#8B1B1B] mt-2">
-                Le montant minimum de commande chez {{ restaurant.name }} est de <strong>{{ min_order|fcfa }}</strong>. Veuillez ajouter {{ min_order|add:"-subtotal"|fcfa }} d'articles.
-              </div>
-            {% endif %}
             <div class="pt-3 border-t border-[#E5DCD0] flex justify-between text-base font-bold text-[#221C18]">
               <span>Total à régler :</span>
               <span class="font-mono text-[#A83B19]">{{ total_amount|fcfa }}</span>
@@ -125,7 +120,7 @@
               </a>
             {% else %}
               <button disabled class="w-full bg-[#E5DCD0] text-[#9E9286] font-semibold text-sm py-2.5 rounded cursor-not-allowed">
-                Montant minimum non atteint
+                Votre panier est vide
               </button>
             {% endif %}
           </div>

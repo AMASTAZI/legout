@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db.models import Sum, Count, Q, ProtectedError
 from django.utils import timezone
@@ -415,6 +416,22 @@ def driver_update_status(request, delivery_id):
             messages.error(request, "Code PIN incorrect. Veuillez redemander le code secret à 4 chiffres au client.")
 
     return redirect('dashboard:driver_active')
+
+
+@livreur_required
+@require_POST
+def driver_update_gps(request, delivery_id):
+    """Mise à jour en temps réel des coordonnées GPS du livreur (simulation ou live GPS)"""
+    delivery = get_object_or_404(Delivery, id=delivery_id, driver=request.user)
+    try:
+        lat = float(request.POST.get('latitude'))
+        lng = float(request.POST.get('longitude'))
+        delivery.current_latitude = lat
+        delivery.current_longitude = lng
+        delivery.save(update_fields=['current_latitude', 'current_longitude'])
+        return JsonResponse({'success': True, 'lat': lat, 'lng': lng})
+    except (ValueError, TypeError):
+        return JsonResponse({'success': False, 'error': 'Coordonnées GPS invalides'}, status=400)
 
 
 @livreur_required

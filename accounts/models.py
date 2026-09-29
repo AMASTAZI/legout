@@ -21,7 +21,7 @@ class CustomUserManager(UserManager):
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = [
-        ('client', 'Client Gourmand'),
+        ('client', 'Client'),
         ('restaurateur', 'Restaurateur / Gérant'),
         ('livreur', 'Livreur Partenaire'),
         ('admin', 'Administrateur Plateforme'),

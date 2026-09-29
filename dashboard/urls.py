@@ -24,6 +24,7 @@ urlpatterns = [
     path('livreur/accepter/<int:delivery_id>/', views.driver_accept_delivery, name='driver_accept'),
     path('livreur/active/', views.driver_active, name='driver_active'),
     path('livreur/etape/<int:delivery_id>/', views.driver_update_status, name='driver_status'),
+    path('livreur/gps/<int:delivery_id>/', views.driver_update_gps, name='driver_update_gps'),
     path('livreur/gains/', views.driver_earnings, name='driver_earnings'),
 
     # 3. Espace Administrateur

@@ -26,8 +26,11 @@ def add_review(request, restaurant_slug):
                 restaurant.total_reviews = all_reviews.count()
                 restaurant.save()
 
-            messages.success(request, "Votre avis a été publié avec succès. Merci de soutenir les restaurateurs locaux !")
+            messages.success(request, "Votre avis et votre notation ont été enregistrés avec succès. Merci pour votre retour d'expérience chez Le Gout !")
         else:
-            messages.error(request, "Impossible d'enregistrer l'avis. Vérifiez les champs.")
+            messages.error(request, "Impossible d'enregistrer l'avis. Veuillez vérifier les champs du formulaire.")
 
+    next_url = request.POST.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect('restaurants:detail', slug=restaurant.slug)

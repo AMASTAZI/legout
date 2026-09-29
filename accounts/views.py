@@ -70,7 +70,7 @@ class CustomLoginView(LoginView):
             
             resto_u = User.objects.filter(role__in=['restaurateur', 'restaurant']).first()
             if resto_u:
-                real_accounts.append({'label': f'Resto ({resto_u.username})', 'username': resto_u.username, 'role_badge': 'Resto'})
+                real_accounts.append({'label': f'Restaurateur ({resto_u.username})', 'username': resto_u.username, 'role_badge': 'Restaurateur'})
             
             driver_u = User.objects.filter(role__in=['livreur', 'driver']).first()
             if driver_u:
@@ -140,7 +140,7 @@ def force_password_change_view(request):
 
 def logout_view(request):
     logout(request)
-    messages.info(request, "Vous avez été déconnecté avec succès. À bientôt sur RestoGourmand !")
+    messages.info(request, "Vous avez été déconnecté avec succès. À bientôt chez Le Gout !")
     return redirect('core:home')
 
 

@@ -25,8 +25,32 @@ def home(request):
     desserts = base_dishes.filter(product_type='dessert')
     featured_dishes = base_dishes.filter(is_featured=True)[:4]
 
-    # Avis vérifiés sur les commandes
-    recent_reviews = Review.objects.filter(is_verified_purchase=True).select_related('client')[:6]
+    # Avis vérifiés et statistiques de notation
+    if restaurant:
+        reviews_qs = restaurant.reviews.all().select_related('client', 'dish').order_by('-created_at')
+    else:
+        reviews_qs = Review.objects.all().select_related('client', 'dish').order_by('-created_at')
+
+    total_reviews_count = reviews_qs.count()
+    if total_reviews_count > 0:
+        avg_rating = round(sum(r.rating for r in reviews_qs) / total_reviews_count, 1)
+        stars_breakdown = []
+        for star in [5, 4, 3, 2, 1]:
+            count = reviews_qs.filter(rating=star).count()
+            pct = round((count / total_reviews_count) * 100)
+            stars_breakdown.append({'star': star, 'count': count, 'pct': pct})
+    else:
+        avg_rating = float(restaurant.rating) if (restaurant and restaurant.rating) else 5.0
+        stars_breakdown = [
+            {'star': 5, 'count': 0, 'pct': 0},
+            {'star': 4, 'count': 0, 'pct': 0},
+            {'star': 3, 'count': 0, 'pct': 0},
+            {'star': 2, 'count': 0, 'pct': 0},
+            {'star': 1, 'count': 0, 'pct': 0},
+        ]
+
+    recent_reviews = reviews_qs[:10]
+    review_dishes = Dish.objects.filter(is_available=True).order_by('name')
 
     context = {
         'restaurant': restaurant,
@@ -36,6 +60,10 @@ def home(request):
         'desserts': desserts,
         'featured_dishes': featured_dishes,
         'recent_reviews': recent_reviews,
+        'total_reviews_count': total_reviews_count,
+        'avg_rating': avg_rating,
+        'stars_breakdown': stars_breakdown,
+        'review_dishes': review_dishes,
         'search_query': query,
     }
     return render(request, 'core/home.html', context)

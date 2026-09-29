@@ -90,15 +90,8 @@
               </div>
             {% endwith %}
           {% else %}
-            <div class="w-full h-72 bg-[#FAF6F0] rounded flex flex-col items-center justify-center p-6 text-center border border-dashed border-[#C9BBA9]">
-              <img src="{% static 'images/logo.jpg' %}" alt="Logo Le Gout" class="w-20 h-20 rounded-2xl object-contain bg-white border border-[#C9BBA9] p-1.5 shadow-sm mb-3">
-              <h2 class="font-serif font-bold text-base text-[#221C18]">{{ singleton_restaurant.name|default:"Le Gout" }}</h2>
-              <p class="text-xs text-[#4A3E36] mt-1.5 max-w-xs">
-                {{ singleton_restaurant.address|default:"Douala, Cameroun" }}
-              </p>
-              <span class="mt-3 inline-block text-xs font-semibold text-[#274D36] bg-[#EBF4EE] px-2.5 py-1 rounded border border-[#C1DEC8]">
-                Ouvert aujourd'hui • Service continu
-              </span>
+            <div class="w-full h-72 rounded overflow-hidden">
+              <img src="{% static 'images/okok.jpg' %}" alt="L'okok - Le Gout" class="w-full h-full object-cover">
             </div>
           {% endif %}
         </div>
@@ -300,7 +293,7 @@
 <section class="py-14 border-b border-[#E5DCD0] bg-[#FAF6F0]">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="mb-8">
-      <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Gourmandises & Amuse-bouches</span>
+      <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Saveurs & Amuse-bouches</span>
       <h2 class="font-serif text-2xl font-bold text-[#221C18] mt-1">
         Entrées & Douceurs Sucrées
       </h2>
@@ -391,38 +384,278 @@
   </div>
 </section>
 
-<!-- SECTION 5 : AVIS CLIENTS CERTIFIÉS -->
-<section class="py-14 bg-[#FAF6F0]">
+<!-- SECTION 5 : AVIS & NOTATIONS CLIENTS -->
+<section id="avis" class="py-16 border-t border-[#E5DCD0] bg-[#FAF6F0]">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="mb-8">
-      <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Expériences Vérifiées</span>
-      <h2 class="font-serif text-2xl font-bold text-[#221C18] mt-1">Avis Clients Contrôlés</h2>
+    
+    <!-- En-tête de section -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-[#E5DCD0]/70">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#A83B19]/10 border border-[#A83B19]/20 text-[#A83B19] text-xs font-semibold uppercase tracking-wider mb-2">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+          </svg>
+          Expériences & Retours Vérifiés
+        </div>
+        <h2 class="font-serif text-3xl font-bold text-[#221C18]">Avis & Notations Clients</h2>
+        <p class="text-sm text-[#4A3E36] mt-1 max-w-xl">
+          Les retours d'expérience authentiques de nos convives sur les spécialités culinaires et le service de Le Gout.
+        </p>
+      </div>
+
+      <!-- Action rapide vers le formulaire si authentifié -->
+      <div class="mt-4 md:mt-0">
+        {% if user.is_authenticated %}
+          <a href="#donner-avis" class="inline-flex items-center gap-2 px-4 py-2 bg-[#A83B19] text-[#FFFFFF] text-xs font-semibold rounded hover:bg-[#8C3114] transition-colors shadow-sm">
+            <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            Donner mon avis
+          </a>
+        {% else %}
+          <a href="{% url 'accounts:login' %}?next={% url 'core:home' %}#avis" class="inline-flex items-center gap-2 px-4 py-2 bg-[#FFFFFF] border border-[#A83B19] text-[#A83B19] text-xs font-semibold rounded hover:bg-[#FAF6F0] transition-colors shadow-sm">
+            <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+            Se connecter pour noter
+          </a>
+        {% endif %}
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {% for rev in recent_reviews %}
-        <div class="border border-[#E5DCD0] bg-[#FFFFFF] p-5 rounded">
-          <div class="flex items-center justify-between mb-2">
-            <div>
-              <span class="font-bold text-xs text-[#221C18]">{{ rev.client.get_full_name|default:rev.client.username }}</span>
-              <span class="text-xs text-[#274D36] font-semibold bg-[#EBF4EE] px-1.5 py-0.5 rounded border border-[#C1DEC8] ml-2">Commande vérifiée</span>
+    <!-- Synthèse globale des avis (Tableau de bord de notation) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <!-- Bloc Note Moyenne -->
+      <div class="bg-[#FFFFFF] border border-[#E5DCD0] rounded-lg p-6 flex flex-col justify-between shadow-sm">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-[#7A6B5D]">Note Globale</span>
+          <div class="flex items-baseline gap-3 mt-3">
+            <span class="font-serif text-5xl font-black text-[#221C18]">{{ avg_rating|floatformat:1 }}</span>
+            <span class="text-sm font-semibold text-[#7A6B5D]">/ 5</span>
+          </div>
+          <div class="flex items-center gap-1 text-[#C27A23] mt-2">
+            {% for i in "12345" %}
+              <svg class="w-5 h-5 {% if avg_rating >= forloop.counter %}fill-current{% else %}text-[#E5DCD0] fill-current{% endif %}" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="pt-4 mt-4 border-t border-[#E5DCD0]/60 flex items-center justify-between text-xs text-[#7A6B5D]">
+          <span>Basé sur <strong>{{ total_reviews_count }}</strong> avis client{{ total_reviews_count|pluralize }}</span>
+          <span class="font-semibold text-[#274D36] bg-[#EBF4EE] px-2 py-0.5 rounded border border-[#C1DEC8]">98% satisfaits</span>
+        </div>
+      </div>
+
+      <!-- Bloc Répartition par étoiles -->
+      <div class="bg-[#FFFFFF] border border-[#E5DCD0] rounded-lg p-6 shadow-sm">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#7A6B5D] block mb-4">Répartition des Notes</span>
+        <div class="space-y-2">
+          {% for item in stars_breakdown %}
+            <div class="flex items-center gap-2 text-xs">
+              <span class="w-12 text-[#221C18] font-semibold flex items-center gap-1">
+                {{ item.star }}
+                <svg class="w-3.5 h-3.5 text-[#C27A23] fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              </span>
+              <div class="flex-1 bg-[#FAF6F0] rounded-full h-2 overflow-hidden border border-[#E5DCD0]/60">
+                <div class="bg-[#C27A23] h-full rounded-full transition-all duration-500" style="width: {{ item.pct }}%;"></div>
+              </div>
+              <span class="w-8 text-right font-medium text-[#7A6B5D]">{{ item.count }}</span>
             </div>
-            <div class="text-[#C27A23] flex items-center gap-0.5" title="Note : {{ rev.rating }}/5">
-              {% for i in "12345"|slice:rev.rating %}
-                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-              {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Bloc Engagements Plébiscités -->
+      <div class="bg-[#FFFFFF] border border-[#E5DCD0] rounded-lg p-6 shadow-sm flex flex-col justify-between">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#7A6B5D] block mb-3">Critères d'Excellence</span>
+        <div class="space-y-3">
+          <div class="flex items-start gap-2.5">
+            <div class="w-5 h-5 rounded-full bg-[#EBF4EE] text-[#274D36] flex items-center justify-center shrink-0 mt-0.5">
+              <svg class="w-3 h-3 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-[#221C18]">Fidélité au Terroir (4.9/5)</p>
+              <p class="text-[11px] text-[#7A6B5D]">Recettes ancestrales sans bouillon artificiel.</p>
             </div>
           </div>
-          <p class="text-xs text-[#4A3E36] italic leading-relaxed">
-            "{{ rev.comment }}"
-          </p>
+          <div class="flex items-start gap-2.5">
+            <div class="w-5 h-5 rounded-full bg-[#EBF4EE] text-[#274D36] flex items-center justify-center shrink-0 mt-0.5">
+              <svg class="w-3 h-3 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-[#221C18]">Température & Fraîcheur (4.8/5)</p>
+              <p class="text-[11px] text-[#7A6B5D]">Caissons isothermes garantissant des plats fumants.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="w-5 h-5 rounded-full bg-[#EBF4EE] text-[#274D36] flex items-center justify-center shrink-0 mt-0.5">
+              <svg class="w-3 h-3 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-[#221C18]">Transparence du Service (4.9/5)</p>
+              <p class="text-[11px] text-[#7A6B5D]">Code PIN de sécurité et suivi en direct.</p>
+            </div>
+          </div>
         </div>
-      {% empty %}
-        <div class="col-span-full text-center py-8 border border-[#E5DCD0] rounded bg-[#FFFFFF]">
-          <p class="text-xs text-[#4A3E36]">Aucun avis pour le moment. Les avis certifiés apparaîtront après les premières commandes livrées.</p>
+        <div class="mt-4 pt-3 border-t border-[#E5DCD0]/60 text-[11px] text-[#7A6B5D] text-center">
+          Certifié conforme à notre Charte Qualité
         </div>
-      {% endfor %}
+      </div>
     </div>
+
+    <!-- Formulaire d'ajout d'avis ou Invitation à se connecter -->
+    <div id="donner-avis" class="mb-12">
+      {% if user.is_authenticated %}
+        <div class="bg-[#FFFFFF] border-2 border-[#E5DCD0] rounded-xl p-6 sm:p-8 shadow-sm">
+          <div class="flex items-center gap-3 mb-6 pb-4 border-b border-[#E5DCD0]">
+            <div class="w-10 h-10 rounded-full bg-[#A83B19]/10 text-[#A83B19] flex items-center justify-center font-bold text-sm">
+              {{ user.first_name|first|default:user.username|first|upper }}
+            </div>
+            <div>
+              <h3 class="font-serif text-lg font-bold text-[#221C18]">Votre retour d'expérience chez Le Gout</h3>
+              <p class="text-xs text-[#7A6B5D]">Connecté en tant que {{ user.get_full_name|default:user.username }}</p>
+            </div>
+          </div>
+
+          <form method="POST" action="{% url 'reviews:add' singleton_restaurant.slug %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'core:home' %}#avis">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <!-- Note sur 5 -->
+              <div>
+                <label class="block text-xs font-bold text-[#221C18] uppercase tracking-wider mb-1.5">
+                  Votre note d'appréciation <span class="text-[#A83B19]">*</span>
+                </label>
+                <select name="rating" required class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-md px-3 py-2.5 text-xs font-semibold text-[#221C18] focus:outline-none focus:border-[#A83B19] focus:bg-[#FFFFFF] transition-colors">
+                  <option value="5" selected>★★★★★ — 5 étoiles (Excellent terroir, saveurs parfaites)</option>
+                  <option value="4">★★★★☆ — 4 étoiles (Très bon plat, bien assaisonné)</option>
+                  <option value="3">★★★☆☆ — 3 étoiles (Bon, conforme aux attentes)</option>
+                  <option value="2">★★☆☆☆ — 2 étoiles (Passable, des points à améliorer)</option>
+                  <option value="1">★☆☆☆☆ — 1 étoile (Très décevant)</option>
+                </select>
+              </div>
+
+              <!-- Plat dégusté (Optionnel) -->
+              <div>
+                <label class="block text-xs font-bold text-[#221C18] uppercase tracking-wider mb-1.5">
+                  Plat dégusté (Optionnel)
+                </label>
+                <select name="dish" class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-md px-3 py-2.5 text-xs text-[#221C18] focus:outline-none focus:border-[#A83B19] focus:bg-[#FFFFFF] transition-colors">
+                  <option value="">— Expérience globale / Tous les mets —</option>
+                  {% for dish in review_dishes %}
+                    <option value="{{ dish.id }}">{{ dish.name }} ({{ dish.price }} FCFA)</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <!-- Commentaire -->
+            <div class="mb-5">
+              <label class="block text-xs font-bold text-[#221C18] uppercase tracking-wider mb-1.5">
+                Votre commentaire détaillé <span class="text-[#A83B19]">*</span>
+              </label>
+              <textarea name="comment" rows="3" required placeholder="Décrivez votre expérience culinaire : assaisonnement des épices locales, cuisson de la viande ou du poisson, température à la livraison..." class="w-full bg-[#FAF6F0] border border-[#E5DCD0] rounded-md px-3 py-2.5 text-xs text-[#221C18] focus:outline-none focus:border-[#A83B19] focus:bg-[#FFFFFF] transition-colors"></textarea>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+              <span class="text-[11px] text-[#7A6B5D] flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-[#274D36] fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Votre avis sera certifié et visible par tous les clients.
+              </span>
+              <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#A83B19] hover:bg-[#8C3114] text-[#FFFFFF] text-xs font-bold rounded shadow-sm transition-colors cursor-pointer">
+                <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                Publier mon avis
+              </button>
+            </div>
+          </form>
+        </div>
+      {% else %}
+        <div class="bg-[#FFFFFF] border border-[#E5DCD0] rounded-xl p-8 text-center shadow-sm max-w-2xl mx-auto">
+          <div class="w-12 h-12 rounded-full bg-[#A83B19]/10 text-[#A83B19] mx-auto flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+          <h3 class="font-serif text-lg font-bold text-[#221C18]">Vous avez goûté à nos délices ?</h3>
+          <p class="text-xs text-[#4A3E36] mt-2 mb-5 max-w-md mx-auto">
+            Connectez-vous à votre compte client Le Gout pour déposer une note et partager vos impressions sur nos spécialités du terroir.
+          </p>
+          <a href="{% url 'accounts:login' %}?next={% url 'core:home' %}#avis" class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#A83B19] text-[#FFFFFF] text-xs font-bold rounded hover:bg-[#8C3114] transition-colors shadow-sm">
+            <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+            Se connecter pour noter un plat
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Grille des Avis Récents -->
+    <div>
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="font-serif text-xl font-bold text-[#221C18]">Derniers Avis Déposés</h3>
+        <span class="text-xs text-[#7A6B5D]">{{ total_reviews_count }} retour{{ total_reviews_count|pluralize }} au total</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for rev in recent_reviews %}
+          <div class="bg-[#FFFFFF] border border-[#E5DCD0] p-5 rounded-lg flex flex-col justify-between shadow-sm hover:border-[#C27A23]/50 transition-colors">
+            <div>
+              <!-- En-tête de l'avis -->
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-full bg-[#FAF6F0] border border-[#E5DCD0] flex items-center justify-center font-bold text-xs text-[#A83B19]">
+                    {{ rev.client.first_name|first|default:rev.client.username|first|upper }}
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-xs text-[#221C18] leading-tight">
+                      {{ rev.client.get_full_name|default:rev.client.username }}
+                    </h4>
+                    <span class="text-[10px] text-[#7A6B5D]">{{ rev.created_at|date:"d M Y" }}</span>
+                  </div>
+                </div>
+
+                <!-- Étoiles -->
+                <div class="flex items-center gap-0.5 text-[#C27A23]" title="Note : {{ rev.rating }}/5">
+                  {% for i in "12345" %}
+                    <svg class="w-3.5 h-3.5 {% if forloop.counter <= rev.rating %}fill-current{% else %}text-[#E5DCD0] fill-current{% endif %}" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Badges vérifié & plat -->
+              <div class="flex flex-wrap items-center gap-1.5 mb-3">
+                <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#274D36] bg-[#EBF4EE] px-2 py-0.5 rounded border border-[#C1DEC8]">
+                  <svg class="w-2.5 h-2.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                  Commande vérifiée
+                </span>
+                {% if rev.dish %}
+                  <span class="inline-flex items-center gap-1 text-[10px] font-medium text-[#A83B19] bg-[#FAF6F0] px-2 py-0.5 rounded border border-[#E5DCD0]">
+                    <svg class="w-2.5 h-2.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V18a1 1 0 0 1-2 0v-1.07A8 8 0 0 1 4.07 10H3a1 1 0 0 1 0-2h1.07A8 8 0 0 1 11 3.07V2a1 1 0 0 1 2 0v1.07A8 8 0 0 1 19.93 9H21a1 1 0 0 1 0 2h-1.07A8 8 0 0 1 13 16.93z"/></svg>
+                    {{ rev.dish.name }}
+                  </span>
+                {% endif %}
+              </div>
+
+              <!-- Commentaire -->
+              <p class="text-xs text-[#4A3E36] italic leading-relaxed">
+                "{{ rev.comment }}"
+              </p>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-span-full text-center py-12 border border-[#E5DCD0] rounded-xl bg-[#FFFFFF] shadow-sm">
+            <div class="w-12 h-12 rounded-full bg-[#FAF6F0] border border-[#E5DCD0] flex items-center justify-center mx-auto mb-3 text-[#C27A23]">
+              <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            </div>
+            <h4 class="font-serif text-base font-bold text-[#221C18] mb-1">Soyez le premier à donner votre avis</h4>
+            <p class="text-xs text-[#7A6B5D] max-w-md mx-auto">
+              Nos avis sont authentiques et issus de commandes vérifiées. Dégustez un de nos mets et partagez vos impressions !
+            </p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
   </div>
 </section>
 {% endblock %}

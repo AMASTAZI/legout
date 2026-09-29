@@ -30,7 +30,7 @@ def status_badge(status):
         'validee': ('bg-emerald-100 text-emerald-900 border-emerald-300', 'Validée cuisine'),
         'confirmee': ('bg-emerald-100 text-emerald-900 border-emerald-300', 'Confirmée'),
         'en_preparation': ('bg-orange-100 text-orange-900 border-orange-300', 'En préparation'),
-        'prete': ('bg-cyan-100 text-cyan-900 border-cyan-300', 'Prête au resto'),
+        'prete': ('bg-cyan-100 text-cyan-900 border-cyan-300', 'Prête en cuisine'),
         'en_livraison': ('bg-indigo-100 text-indigo-900 border-indigo-300', 'En cours de livraison'),
         'livree': ('bg-stone-200 text-stone-900 border-stone-400', 'Livrée'),
         'refusee': ('bg-rose-100 text-rose-900 border-rose-300 font-bold', 'Refusée & Remboursée'),

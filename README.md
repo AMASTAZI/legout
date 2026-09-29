@@ -1,6 +1,5 @@
-<<<<<<< HEAD
-# RestoGourmand Cameroun 🇨🇲
-### Plateforme Web de Livraison de Repas du Terroir Camerounais & Africain
+# Le Gout Cameroun
+### Restaurant de Gastronomie Camerounaise & Africaine Authentique
 
 Application web monolithique Django complète, authentique et réaliste, inspirée de l'expérience culinaire camerounaise (Douala, Yaoundé, Kribi, Bafoussam). L'application respecte scrupuleusement les codes culturels, les prix réels en FCFA, les repères urbains locaux, et élimine tous les clichés et templates SaaS génériques.
 
@@ -30,7 +29,7 @@ Des boutons de **connexion rapide en 1 clic** sont intégrés sur la page de con
 
 | Rôle | Identifiant | Mot de passe | Description & Espace |
 | :--- | :--- | :--- | :--- |
-| **Client Gourmand** | `client_sophie` | `passer123` | Navigation, panier, checkout MoMo/Orange, suivi GPS en direct, code secret PIN, avis, assistant IA. |
+| **Client** | `client_sophie` | `passer123` | Navigation, panier, checkout MoMo/Orange, suivi GPS en direct, code secret PIN, avis, assistant IA. |
 | **Restaurateur** | `maman_tantine` | `passer123` | Dashboard cuisine (`/dashboard/restaurant/`), commandes en attente, acceptation en 1 clic, gestion de la carte et ruptures de stock. |
 | **Livreur Partenaire** | `livreur_martial` | `passer123` | Dashboard coursier (`/dashboard/livreur/`), acceptation des courses disponibles, guidage GPS, validation par code PIN client, gains en FCFA. |
 | **Administrateur** | `admin` | `passer123` | Dashboard central (`/dashboard/admin/`), volume d'affaires (GMV), commissions (10%), modération des restaurants et utilisateurs + Admin Django (`/admin-technique/`). |
@@ -55,35 +54,120 @@ RestoGoumand/
 
 ---
 
-## 🚀 4. Lancement Rapide
+## 🚀 4. Installation Complète des Paquets & Démarrage
 
-1. **Vérifier les dépendances :**
+### Étape 1 : Création et activation de l'environnement virtuel
+
+* **Créer l'environnement virtuel :**
+  ```powershell
+  python -m venv venv
+  ```
+
+* **Activer l'environnement virtuel :**
+  * Sur **Windows (PowerShell)** :
+    ```powershell
+    .\venv\Scripts\Activate.ps1
+    ```
+  * Sur **Windows (Invite de commandes CMD)** :
+    ```cmd
+    venv\Scripts\activate.bat
+    ```
+  * Sur **Linux / macOS** :
+    ```bash
+    source venv/bin/activate
+    ```
+
+* **Mettre à jour pip :**
+  ```powershell
+  python -m pip install --upgrade pip
+  ```
+
+---
+
+### Étape 2 : Téléchargement et installation des paquets requis
+
+Vous pouvez installer l'ensemble des dépendances en une seule fois, via le fichier `requirements.txt`, ou paquet par paquet.
+
+#### Option A — Installation globale en une seule commande (Recommandé) :
+```powershell
+pip install django djangorestframework pillow reportlab whitenoise python-dotenv tzdata
+```
+
+#### Option B — Installation via le fichier `requirements.txt` :
+```powershell
+pip install -r requirements.txt
+```
+
+#### Option C — Installation détaillée paquet par paquet (sans en sauter aucun) :
+
+1. **Django** (Framework web applicatif principal) :
    ```powershell
-   pip install django djangorestframework pillow whitenoise
+   pip install django
    ```
 
-2. **Appliquer les migrations et alimenter la base de données :**
+2. **Django REST Framework** (API REST et sérialiseurs JSON) :
    ```powershell
+   pip install djangorestframework
+   ```
+
+3. **Pillow** (Traitement et téléversement des photos des plats et logos `ImageField`) :
+   ```powershell
+   pip install pillow
+   ```
+
+4. **ReportLab** (Moteur de génération automatique des factures et reçus au format PDF) :
+   ```powershell
+   pip install reportlab
+   ```
+
+5. **WhiteNoise** (Service haute performance et mise en cache des fichiers statiques CSS/JS/images) :
+   ```powershell
+   pip install whitenoise
+   ```
+
+6. **Python-dotenv** (Gestion et chargement des variables d'environnement et clés secrètes) :
+   ```powershell
+   pip install python-dotenv
+   ```
+
+7. **Tzdata** (Base des fuseaux horaires IANA / Afrique Centrale pour Windows) :
+   ```powershell
+   pip install tzdata
+   ```
+
+---
+
+### Étape 3 : Initialisation de la base de données & Tests
+
+1. **Appliquer les migrations :**
+   ```powershell
+   python manage.py makemigrations
    python manage.py migrate
-   python manage.py seed_data
    ```
 
-3. **Lancer la suite de tests automatisés :**
+2. **Vérifier l'intégrité du système (0 anomalie) :**
+   ```powershell
+   python manage.py check
+   ```
+
+3. **Exécuter la suite complète de tests unitaires :**
    ```powershell
    python manage.py test
    ```
 
-4. **Démarrer le serveur de développement :**
-   ```powershell
-   python manage.py runserver
-   ```
+---
 
-5. **Accéder à l'application :**
-   * **Vitrine publique :** [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
-   * **Assistant Tantie Ndolo :** [http://127.0.0.1:8000/assistant-culinaire/](http://127.0.0.1:8000/assistant-culinaire/)
-   * **Tableau de Bord Métier :** [http://127.0.0.1:8000/dashboard/](http://127.0.0.1:8000/dashboard/)
-   * **Administration Technique Django :** [http://127.0.0.1:8000/admin-technique/](http://127.0.0.1:8000/admin-technique/)
-=======
-# legout
-Application de restaurant
->>>>>>> 5259912d5d87d3c64f9131c4740021c8f86ccae8
+### Étape 4 : Lancement du serveur de développement
+
+```powershell
+python manage.py runserver
+```
+
+---
+
+### Étape 5 : Accès aux interfaces
+
+* **Vitrine publique & Commande en ligne :** [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+* **Assistant Culinaire en direct :** [http://127.0.0.1:8000/assistant-culinaire/](http://127.0.0.1:8000/assistant-culinaire/)
+* **Tableau de Bord Métier (Restaurateur / Livreur / Admin) :** [http://127.0.0.1:8000/dashboard/](http://127.0.0.1:8000/dashboard/)
+* **Administration Technique Django :** [http://127.0.0.1:8000/admin-technique/](http://127.0.0.1:8000/admin-technique/)

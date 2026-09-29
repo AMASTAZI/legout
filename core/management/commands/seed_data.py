@@ -6,7 +6,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(
             self.style.ERROR(
-                "[REFUSÉ] Aucune donnée fictive ou de démonstration n'est autorisée dans RestoGourmand.\n"
+                "[REFUSÉ] Aucune donnée fictive ou de démonstration n'est autorisée dans Le Gout.\n"
                 "Toutes les données (utilisateurs, restaurants, plats, commandes) doivent être créées "
                 "réellement par les utilisateurs ou enregistrées manuellement par un administrateur."
             )

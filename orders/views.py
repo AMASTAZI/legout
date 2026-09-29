@@ -36,9 +36,14 @@ def cart_view(request):
                 'subtotal': line_subtotal,
             })
 
-    delivery_fee = restaurant.delivery_fee if restaurant else 1000
-    min_order = restaurant.min_order_amount if restaurant else 0
-    can_checkout = subtotal >= min_order and len(cart_items) > 0
+    base_delivery = restaurant.delivery_fee if restaurant else 1000
+    if subtotal < 2000 and cart_items:
+        # En arrière-plan : 10% + 1000 FCFA de livraison si commande < 2000 FCFA (sans mentionner les 10% au client)
+        delivery_fee = 1000 + int(round(subtotal * 0.10))
+    else:
+        delivery_fee = base_delivery
+
+    can_checkout = len(cart_items) > 0
 
     context = {
         'cart_items': cart_items,
@@ -46,7 +51,6 @@ def cart_view(request):
         'restaurant': restaurant,
         'delivery_fee': delivery_fee,
         'total_amount': subtotal + delivery_fee if cart_items else 0,
-        'min_order': min_order,
         'can_checkout': can_checkout,
     }
     return render(request, 'orders/cart.html', context)
@@ -147,7 +151,11 @@ def checkout_view(request):
 
     restaurant = Restaurant.get_solo()
     subtotal = sum(d.price * cart[str(d.id)]['quantity'] for d in dishes)
-    delivery_fee = restaurant.delivery_fee if restaurant else 1000
+    base_delivery = restaurant.delivery_fee if restaurant else 1000
+    if subtotal < 2000:
+        delivery_fee = 1000 + int(round(subtotal * 0.10))
+    else:
+        delivery_fee = base_delivery
 
     if request.method == 'POST':
         delivery_type = request.POST.get('delivery_type', 'delivery')

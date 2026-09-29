@@ -8,6 +8,11 @@ from django.conf.urls.static import static
 
 from django.views.generic import RedirectView
 
+# Configuration officielle de l'Administration Django Le Gout
+admin.site.site_header = "Le Gout — Administration"
+admin.site.site_title = "Le Gout Admin"
+admin.site.index_title = "Supervision et Gestion Le Gout"
+
 urlpatterns = [
     path('admin/', admin.site.urls), # Interface Admin Django standard
     path('admin-technique/', RedirectView.as_view(url='/admin/', permanent=False)), # Redirection automatique vers /admin/

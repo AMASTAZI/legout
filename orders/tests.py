@@ -50,8 +50,8 @@ class MonoRestaurantTestSuite(TestCase):
         # 2. Restaurant Singleton
         self.restaurant = Restaurant.objects.create(
             owner=self.resto_user,
-            name='RestoGourmand Cameroun',
-            slug='restogourmand-cameroun',
+            name='Le Gout',
+            slug='le-gout',
             tagline='La haute gastronomie camerounaise',
             description='Recettes traditionnelles et braises au bois d\'arbre à pain.',
             city='Douala',
@@ -311,7 +311,7 @@ class MonoRestaurantTestSuite(TestCase):
     def test_welcome_bonus_attribution_at_registration(self):
         """À l'inscription, chaque nouveau client reçoit automatiquement un solde fictif de 10 000 FCFA"""
         resp = self.c.post(reverse('accounts:register'), {
-            'username': 'nouveau_gourmand',
+            'username': 'nouveau_client',
             'first_name': 'Mireille',
             'last_name': 'Ewonde',
             'email': 'mireille@test.cm',
@@ -322,7 +322,7 @@ class MonoRestaurantTestSuite(TestCase):
             'password_confirm': 'SecurePassword123!',
         })
         self.assertEqual(resp.status_code, 302)
-        new_client = User.objects.get(username='nouveau_gourmand')
+        new_client = User.objects.get(username='nouveau_client')
         self.assertEqual(new_client.role, 'client')
         self.assertEqual(new_client.wallet_balance, 10000)
 
@@ -335,7 +335,8 @@ class MonoRestaurantTestSuite(TestCase):
         self.client_user.save()
         self.c.login(username='sophie_client', password='Password123!')
 
-        # Panier : 1x Foléré (1500 FCFA) + Livraison (1000 FCFA) = 2500 FCFA
+        # Panier : 1x Foléré (1500 FCFA) < 2000 FCFA -> En arrière-plan : 10% (150 F) + Livraison (1000 F) = 1150 F
+        # Total : 1500 + 1150 = 2650 FCFA
         self.c.post(reverse('orders:add_to_cart', args=[self.drink_folere.id]), {'quantity': 1})
         checkout_resp = self.c.post(reverse('orders:checkout'), {
             'delivery_type': 'delivery',
@@ -350,19 +351,21 @@ class MonoRestaurantTestSuite(TestCase):
 
         # Vérification débit du solde portefeuille
         self.client_user.refresh_from_db()
-        self.assertEqual(self.client_user.wallet_balance, 7500)  # 10 000 - 2 500 = 7 500 FCFA
+        self.assertEqual(self.client_user.wallet_balance, 7350)  # 10 000 - 2 650 = 7 350 FCFA
 
         # Commande payée et en attente de validation
         order = Order.objects.filter(client=self.client_user, payment_method='wallet').first()
         self.assertIsNotNone(order)
         self.assertEqual(order.payment_status, 'paid')
         self.assertEqual(order.status, 'payee')
+        self.assertEqual(order.delivery_fee, 1150)
+        self.assertEqual(order.total_amount, 2650)
 
         # Facture générée automatiquement
         from orders.models import Invoice
         self.assertTrue(hasattr(order, 'invoice'))
         invoice = order.invoice
-        self.assertEqual(invoice.total_amount, 2500)
+        self.assertEqual(invoice.total_amount, 2650)
         self.assertFalse(invoice.is_refunded)
         self.assertTrue(invoice.invoice_number.startswith('FAC-'))
 
@@ -454,4 +457,48 @@ class MonoRestaurantTestSuite(TestCase):
 
         # Mission de livraison annulée
         self.assertEqual(order.delivery_mission.status, 'echec')
+        self.c.logout()
+
+    # ----------------------------------------------------
+    # TEST 12: Aucun blocage de commande minimum & Frais 10% + 1000 F en arrière-plan si < 2000 F
+    # ----------------------------------------------------
+    def test_small_order_under_2000_surcharge_and_no_blocking_message(self):
+        """Vérifie qu'il n'y a plus de message bloquant et que 10% + 1000 F de livraison s'appliquent discrètement"""
+        self.c.login(username='sophie_client', password='Password123!')
+
+        # Ajout d'un article inférieur à 2000 FCFA (Foléré à 1500 FCFA)
+        self.c.post(reverse('orders:add_to_cart', args=[self.drink_folere.id]), {'quantity': 1})
+
+        # Consultation du panier
+        cart_resp = self.c.get(reverse('orders:cart'))
+        self.assertEqual(cart_resp.status_code, 200)
+
+        # Aucun message de blocage de commande minimum
+        self.assertNotContains(cart_resp, 'Le montant minimum de commande')
+        self.assertNotContains(cart_resp, 'Montant minimum non atteint')
+        self.assertContains(cart_resp, 'Passer à la livraison')
+
+        # Calcul financier discret en arrière-plan : 1500 F + (1000 F + 150 F) = 2650 FCFA
+        self.assertEqual(cart_resp.context['subtotal'], 1500)
+        self.assertEqual(cart_resp.context['delivery_fee'], 1150)
+        self.assertEqual(cart_resp.context['total_amount'], 2650)
+        self.assertTrue(cart_resp.context['can_checkout'])
+
+        # Validation de la commande
+        checkout_resp = self.c.post(reverse('orders:checkout'), {
+            'delivery_type': 'delivery',
+            'delivery_city': 'Douala',
+            'delivery_neighborhood': 'Akwa',
+            'delivery_address': 'Rue Joss',
+            'delivery_landmark': 'Face pharmacie',
+            'delivery_phone': '+237 694 00 11 22',
+            'payment_method': 'cash_on_delivery',
+        })
+        self.assertEqual(checkout_resp.status_code, 302)
+
+        order = Order.objects.filter(client=self.client_user, payment_method='cash_on_delivery').first()
+        self.assertIsNotNone(order)
+        self.assertEqual(order.subtotal, 1500)
+        self.assertEqual(order.delivery_fee, 1150)
+        self.assertEqual(order.total_amount, 2650)
         self.c.logout()

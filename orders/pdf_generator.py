@@ -105,10 +105,10 @@ def generate_invoice_pdf(order):
     story = []
 
     restaurant = order.restaurant
-    resto_name = restaurant.name if restaurant else "RestoGourmand"
+    resto_name = restaurant.name if restaurant else "Le Gout"
     resto_tagline = restaurant.tagline if restaurant else "Saveurs Authentiques du Terroir Camerounais"
     resto_addr = restaurant.address if restaurant else "Boulevard de la Liberté, Akwa"
-    resto_city = restaurant.city if restaurant else "Douala"
+    resto_city = restaurant.city if restaurant else "Yaoundé"
     resto_phone = restaurant.phone if restaurant else "+237 690 12 34 56"
 
     # En-tête : Restaurant & Logo à gauche, Facture N° & Date à droite
@@ -273,7 +273,7 @@ def generate_invoice_pdf(order):
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#D1D5DB'), spaceBefore=5, spaceAfter=8))
     footer_text = (
         f"<font size=8 color='#6B7280'>"
-        f"Document généré automatiquement par le système RestoGourmand le {order.updated_at.strftime('%d/%m/%Y à %H:%M')}. "
+        f"Document généré automatiquement par le système Le Gout le {order.updated_at.strftime('%d/%m/%Y à %H:%M')}. "
         f"Merci d'honorer la cuisine camerounaise authentique. En cas de réclamation, contactez le restaurant au {resto_phone}."
         f"</font>"
     )
