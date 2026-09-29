@@ -29,10 +29,10 @@ Des boutons de **connexion rapide en 1 clic** sont intégrés sur la page de con
 
 | Rôle | Identifiant | Mot de passe | Description & Espace |
 | :--- | :--- | :--- | :--- |
-| **Client** | `client_sophie` | `passer123` | Navigation, panier, checkout MoMo/Orange, suivi GPS en direct, code secret PIN, avis, assistant IA. |
-| **Restaurateur** | `maman_tantine` | `passer123` | Dashboard cuisine (`/dashboard/restaurant/`), commandes en attente, acceptation en 1 clic, gestion de la carte et ruptures de stock. |
-| **Livreur Partenaire** | `livreur_martial` | `passer123` | Dashboard coursier (`/dashboard/livreur/`), acceptation des courses disponibles, guidage GPS, validation par code PIN client, gains en FCFA. |
-| **Administrateur** | `admin` | `passer123` | Dashboard central (`/dashboard/admin/`), volume d'affaires (GMV), commissions (10%), modération des restaurants et utilisateurs + Admin Django (`/admin-technique/`). |
+| **Client** | `adong@gmail.com` | `DJEUGA123` | Navigation, panier, checkout MoMo/Orange, suivi GPS en direct, code secret PIN, avis, assistant IA. |
+| **Restaurateur** | `xazipemuq@mailinator.com` | `Xazipu123` | Dashboard cuisine (`/dashboard/restaurant/`), commandes en attente, acceptation en 1 clic, gestion de la carte et ruptures de stock. |
+| **Livreur Partenaire** | `livreur@gmail.com` | `Livreur123` | Dashboard coursier (`/dashboard/livreur/`), acceptation des courses disponibles, guidage GPS, validation par code PIN client, gains en FCFA. |
+| **Administrateur** | `gout@gmail.com` | `Gout123` | Dashboard central (`/dashboard/admin/`), volume d'affaires (GMV), commissions (10%), modération des restaurants et utilisateurs + Admin Django (`/admin-technique/`). |
 
 ---
 
