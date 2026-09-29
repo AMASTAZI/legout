@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # RestoGourmand Cameroun 🇨🇲
 ### Plateforme Web de Livraison de Repas du Terroir Camerounais & Africain
 
@@ -82,3 +83,7 @@ RestoGoumand/
    * **Assistant Tantie Ndolo :** [http://127.0.0.1:8000/assistant-culinaire/](http://127.0.0.1:8000/assistant-culinaire/)
    * **Tableau de Bord Métier :** [http://127.0.0.1:8000/dashboard/](http://127.0.0.1:8000/dashboard/)
    * **Administration Technique Django :** [http://127.0.0.1:8000/admin-technique/](http://127.0.0.1:8000/admin-technique/)
+=======
+# legout
+Application de restaurant
+>>>>>>> 5259912d5d87d3c64f9131c4740021c8f86ccae8
