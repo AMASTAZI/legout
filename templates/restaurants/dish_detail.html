@@ -1,0 +1,438 @@
+{% extends 'base_public.html' %}
+{% load static resto_tags %}
+
+{% block title %}{{ dish.name }} - {{ restaurant.name|default:"Le Gout" }}{% endblock %}
+
+{% block content %}
+<div class="bg-[#FAF6F0] min-h-screen py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Fil d'Ariane (Breadcrumb) -->
+    <nav class="flex items-center text-xs text-[#6B6156] mb-6 space-x-2" aria-label="Breadcrumb">
+      <a href="{% url 'core:home' %}" class="hover:text-[#A83B19] transition-colors flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span>Accueil</span>
+      </a>
+      <span>/</span>
+      {% if dish.product_type == 'boisson' %}
+        <a href="{% url 'core:home' %}#boissons" class="hover:text-[#A83B19] transition-colors">Boissons du Terroir</a>
+      {% else %}
+        <a href="{% url 'core:home' %}#menu" class="hover:text-[#A83B19] transition-colors">Carte des Plats</a>
+      {% endif %}
+      <span>/</span>
+      <span class="text-[#221C18] font-semibold truncate">{{ dish.name }}</span>
+    </nav>
+
+    <!-- Fiche Produit Principale -->
+    <div class="bg-[#FFFFFF] rounded-2xl border border-[#E5DCD0] shadow-sm overflow-hidden mb-12">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 sm:p-10">
+
+        <!-- Colonne Gauche : Visuel Produit -->
+        <div class="lg:col-span-6 flex flex-col">
+          <div class="relative w-full h-80 sm:h-96 md:h-[420px] rounded-xl overflow-hidden bg-[#E5DCD0] shadow-inner group">
+            {% if dish.image %}
+              <img src="{{ dish.image }}" alt="{{ dish.name }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+            {% else %}
+              <div class="w-full h-full flex flex-col items-center justify-center bg-[#F4ECE1] p-6 text-center">
+                <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-24 h-24 rounded-2xl object-contain opacity-80 mb-3">
+                <span class="text-sm font-semibold text-[#4A3E36]">Photo en cours d'actualisation</span>
+              </div>
+            {% endif %}
+
+            <!-- Badges Visuels sur l'image -->
+            <div class="absolute top-4 left-4 flex flex-col gap-2">
+              {% if dish.product_type == 'boisson' %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#EBF4EE] text-[#274D36] border border-[#C1DEC8] shadow-sm">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                  </svg>
+                  Boisson Artisanale Fraîche
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm
+                  {% if dish.spice_level == 'doux' %}badge-spice-doux
+                  {% elif dish.spice_level == 'moyen' %}badge-spice-moyen
+                  {% elif dish.spice_level == 'releve' %}badge-spice-releve
+                  {% else %}badge-spice-fort{% endif %}">
+                  {{ dish.get_spice_level_display }}
+                </span>
+              {% endif %}
+
+              {% if dish.is_featured %}
+                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#FAF0D7] text-[#9A6208] border border-[#E9CD8A] shadow-sm">
+                  <svg class="w-3.5 h-3.5 fill-current text-[#D97706]" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                  Recommandé par le Chef
+                </span>
+              {% endif %}
+            </div>
+
+            <!-- Badge Origine -->
+            {% if dish.authentic_origin %}
+              <div class="absolute bottom-4 left-4 bg-[#221C18]/85 backdrop-blur-sm text-[#FAF6F0] text-xs font-medium px-3 py-1.5 rounded-lg shadow">
+                Origine : {{ dish.authentic_origin }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Colonne Droite : Informations, Note, Prix & Panier -->
+        <div class="lg:col-span-6 flex flex-col justify-between">
+          <div>
+            <!-- Catégorie & Statut -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">
+                {{ dish.get_product_type_display }}
+              </span>
+              {% if dish.is_available %}
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#274D36] bg-[#EBF4EE] px-2.5 py-1 rounded-full border border-[#C1DEC8]">
+                  <span class="w-2 h-2 rounded-full bg-[#2E7D32] animate-pulse"></span>
+                  Disponible en cuisine
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 text-xs font-semibold text-[#8C1D18] bg-[#FCECEB] px-2.5 py-1 rounded-full border border-[#F4B2AF]">
+                  Momentanément indisponible
+                </span>
+              {% endif %}
+            </div>
+
+            <!-- Nom du Plat -->
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#221C18] leading-tight">
+              {{ dish.name }}
+            </h1>
+
+            <!-- Évaluation & Avis spécifiques -->
+            <div class="flex items-center gap-3 mt-3 pb-4 border-b border-[#E5DCD0]">
+              {% if avg_rating %}
+                <div class="flex items-center gap-1.5">
+                  <div class="flex text-[#F59E0B]">
+                    {% for i in "12345" %}
+                      <svg class="w-4 h-4 {% if forloop.counter <= avg_rating %}fill-current{% else %}text-[#D1D5DB] fill-current{% endif %}" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                    {% endfor %}
+                  </div>
+                  <span class="font-bold text-sm text-[#221C18]">{{ avg_rating }} / 5</span>
+                </div>
+                <span class="text-xs text-[#6B6156]">•</span>
+                <a href="#avis-produit" class="text-xs text-[#A83B19] hover:underline font-medium">
+                  {{ total_reviews }} avis certifié{{ total_reviews|pluralize }}
+                </a>
+              {% else %}
+                <div class="flex items-center gap-1.5 text-xs text-[#6B6156]">
+                  <span class="text-[#F59E0B] font-bold">★</span>
+                  <span>Pas encore noté</span>
+                  <span>•</span>
+                  <a href="#avis-produit" class="text-[#A83B19] hover:underline">Soyez le premier à donner votre avis</a>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Prix -->
+            <div class="mt-4 flex items-baseline gap-3">
+              <span class="font-mono text-3xl font-extrabold text-[#A83B19]">
+                {{ dish.price|fcfa }}
+              </span>
+              <span class="text-xs text-[#6B6156]">TVA et conditionnement inclus</span>
+            </div>
+
+            <!-- Description Complète -->
+            <div class="mt-4 text-sm text-[#4A3E36] leading-relaxed">
+              {{ dish.description|linebreaks }}
+            </div>
+
+            <!-- Caractéristiques & Accompagnements -->
+            <div class="mt-5 space-y-2.5">
+              {% if dish.sides_included %}
+                <div class="flex items-start gap-2.5 p-3 rounded-lg bg-[#EBF4EE] border border-[#C1DEC8] text-xs text-[#274D36]">
+                  <svg class="w-4 h-4 shrink-0 mt-0.5 text-[#2E7D32]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <div>
+                    <strong class="font-bold">Garniture / Conditionnement :</strong>
+                    <span>{{ dish.sides_included }}</span>
+                  </div>
+                </div>
+              {% endif %}
+
+              <div class="grid grid-cols-2 gap-3 pt-2 text-xs text-[#4A3E36]">
+                <div class="p-2.5 rounded-lg bg-[#FAF6F0] border border-[#E5DCD0]">
+                  <span class="text-[#6B6156] block">Temps moyen de préparation</span>
+                  <span class="font-bold text-[#221C18] mt-0.5 block">{{ dish.prep_time_minutes }} minutes</span>
+                </div>
+                <div class="p-2.5 rounded-lg bg-[#FAF6F0] border border-[#E5DCD0]">
+                  <span class="text-[#6B6156] block">Expédition</span>
+                  <span class="font-bold text-[#221C18] mt-0.5 block">Caisson isotherme scellé</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulaire Ajout au panier avec sélecteur de quantité -->
+          <div class="mt-8 pt-6 border-t border-[#E5DCD0]">
+            {% if dish.is_available %}
+              <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}" class="ajax-add-to-cart-form space-y-4">
+                {% csrf_token %}
+                
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                  <!-- Sélecteur de Quantité -->
+                  <div class="flex items-center border border-[#C9BBA9] rounded-lg bg-[#FAF6F0] overflow-hidden self-start">
+                    <button type="button" class="qty-btn-minus px-3.5 py-2.5 text-[#221C18] hover:bg-[#E5DCD0] font-bold text-base transition-colors" aria-label="Diminuer la quantité">−</button>
+                    <input type="number" name="quantity" value="1" min="1" max="20" class="qty-input w-14 text-center font-mono font-bold text-sm bg-transparent border-none focus:outline-none focus:ring-0 text-[#221C18]" readonly>
+                    <button type="button" class="qty-btn-plus px-3.5 py-2.5 text-[#221C18] hover:bg-[#E5DCD0] font-bold text-base transition-colors" aria-label="Augmenter la quantité">+</button>
+                  </div>
+
+                  <!-- Bouton Ajouter -->
+                  <button type="submit" class="btn-terracotta flex-1 py-3 px-6 text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                    <span>Ajouter au panier</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-2 text-xs text-[#6B6156]">
+                  <svg class="w-4 h-4 text-[#2E7D32]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>Commande directe sans minimum requis • Livraison rapide garantie</span>
+                </div>
+              </form>
+            {% else %}
+              <div class="p-4 rounded-lg bg-[#FAF6F0] border border-[#E5DCD0] text-center">
+                <p class="text-sm font-semibold text-[#8C1D18]">Ce produit est momentanément en rupture de stock en cuisine.</p>
+                <p class="text-xs text-[#6B6156] mt-1">Revenez un peu plus tard ou découvrez nos autres spécialités ci-dessous.</p>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION AVIS SPÉCIFIQUES À CE PRODUIT -->
+    <section id="avis-produit" class="mb-14 scroll-mt-24">
+      <div class="bg-[#FFFFFF] rounded-2xl border border-[#E5DCD0] p-6 sm:p-10 shadow-sm">
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-8 border-b border-[#E5DCD0] gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Retours d'expérience vérifiés</span>
+            <h2 class="font-serif text-2xl font-bold text-[#221C18] mt-1">
+              Avis des clients sur « {{ dish.name }} »
+            </h2>
+            <p class="text-xs text-[#4A3E36] mt-1">
+              Seuls les avis formulés précisément sur ce produit sont affichés dans cette section.
+            </p>
+          </div>
+
+          <!-- Note Globale Produit -->
+          {% if avg_rating %}
+            <div class="flex items-center gap-4 bg-[#FAF6F0] px-5 py-3 rounded-xl border border-[#E5DCD0]">
+              <div class="text-center">
+                <span class="font-mono text-3xl font-extrabold text-[#221C18]">{{ avg_rating }}</span>
+                <span class="text-xs text-[#6B6156]"> / 5</span>
+              </div>
+              <div class="border-l border-[#C9BBA9] pl-4">
+                <div class="flex text-[#F59E0B]">
+                  {% for i in "12345" %}
+                    <svg class="w-4 h-4 {% if forloop.counter <= avg_rating %}fill-current{% else %}text-[#D1D5DB] fill-current{% endif %}" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  {% endfor %}
+                </div>
+                <div class="text-[11px] text-[#6B6156] mt-0.5">{{ total_reviews }} avis certifié{{ total_reviews|pluralize }}</div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          <!-- Colonne Liste des avis -->
+          <div class="lg:col-span-7 space-y-4">
+            {% if reviews %}
+              {% for review in reviews %}
+                <article class="p-5 rounded-xl bg-[#FAF6F0] border border-[#E5DCD0] transition-colors">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-full bg-[#A83B19] text-white text-xs font-bold flex items-center justify-center uppercase">
+                        {{ review.client.first_name|default:review.client.username|slice:":1" }}
+                      </div>
+                      <div>
+                        <h4 class="text-xs font-bold text-[#221C18]">
+                          {{ review.client.get_full_name|default:review.client.username }}
+                        </h4>
+                        <span class="text-[10px] text-[#6B6156]">{{ review.created_at|date:"d F Y à H:i" }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Étoiles de l'avis -->
+                    <div class="flex text-[#F59E0B]">
+                      {% for i in "12345" %}
+                        <svg class="w-3.5 h-3.5 {% if forloop.counter <= review.rating %}fill-current{% else %}text-[#D1D5DB] fill-current{% endif %}" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                      {% endfor %}
+                    </div>
+                  </div>
+
+                  <p class="text-xs text-[#4A3E36] leading-relaxed">
+                    {{ review.comment }}
+                  </p>
+
+                  {% if review.is_verified_purchase %}
+                    <div class="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-[#274D36]">
+                      <svg class="w-3.5 h-3.5 text-[#2E7D32]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      <span>Expérience d'achat vérifiée</span>
+                    </div>
+                  {% endif %}
+                </article>
+              {% endfor %}
+            {% else %}
+              <div class="p-8 text-center rounded-xl bg-[#FAF6F0] border border-[#E5DCD0]">
+                <svg class="w-10 h-10 text-[#C9BBA9] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                <h3 class="font-serif font-bold text-sm text-[#221C18]">Aucun avis pour le moment</h3>
+                <p class="text-xs text-[#6B6156] mt-1 max-w-sm mx-auto">
+                  Avez-vous déjà goûté à « {{ dish.name }} » ? Laissez votre note et vos impressions pour guider la communauté !
+                </p>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Colonne Formulaire pour déposer un avis -->
+          <div class="lg:col-span-5">
+            <div class="bg-[#FAF6F0] p-6 rounded-xl border border-[#E5DCD0] sticky top-24">
+              <h3 class="font-serif font-bold text-base text-[#221C18] mb-2">
+                Donner votre avis sur ce produit
+              </h3>
+              <p class="text-xs text-[#6B6156] mb-4">
+                Partagez votre appréciation sur les arômes, les textures et la qualité de la préparation.
+              </p>
+
+              {% if user.is_authenticated %}
+                <form method="POST" action="{% url 'reviews:add' restaurant.slug|default:'le-gout' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="dish" value="{{ dish.id }}">
+                  <input type="hidden" name="next" value="{{ request.path }}#avis-produit">
+
+                  <div class="space-y-4">
+                    <div>
+                      <label class="block text-xs font-bold text-[#221C18] mb-1">Votre note globale</label>
+                      <select name="rating" class="w-full bg-[#FFFFFF] border border-[#C9BBA9] rounded-lg px-3 py-2 text-xs font-semibold text-[#221C18] focus:outline-none focus:border-[#A83B19]">
+                        <option value="5">★★★★★ - 5 étoiles (Excellent terroir)</option>
+                        <option value="4">★★★★☆ - 4 étoiles (Très bon)</option>
+                        <option value="3">★★★☆☆ - 3 étoiles (Bon)</option>
+                        <option value="2">★★☆☆☆ - 2 étoiles (Passable)</option>
+                        <option value="1">★☆☆☆☆ - 1 étoile (Très décevant)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-bold text-[#221C18] mb-1">Votre commentaire</label>
+                      <textarea name="comment" rows="4" required class="w-full bg-[#FFFFFF] border border-[#C9BBA9] rounded-lg p-3 text-xs text-[#221C18] focus:outline-none focus:border-[#A83B19]" placeholder="Qu'avez-vous pensé de la saveur, de la garniture et de la cuisson de ce plat ?"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-terracotta w-full py-2.5 px-4 text-xs font-bold shadow-sm">
+                      Publier mon avis
+                    </button>
+                  </div>
+                </form>
+              {% else %}
+                <div class="text-center py-6">
+                  <p class="text-xs text-[#4A3E36] mb-4">
+                    Connectez-vous à votre compte client pour publier un avis certifié sur ce plat.
+                  </p>
+                  <a href="{% url 'accounts:login' %}?next={{ request.path }}#avis-produit" class="btn-outline-warm inline-block text-xs py-2 px-4 font-bold">
+                    Se connecter pour noter
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION PRODUITS SIMILAIRES / SUGGESTIONS -->
+    {% if related_dishes %}
+      <section class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-serif text-xl sm:text-2xl font-bold text-[#221C18]">
+            Vous aimerez aussi dans la même carte
+          </h2>
+          <a href="{% if dish.product_type == 'boisson' %}{% url 'core:home' %}#boissons{% else %}{% url 'core:home' %}#menu{% endif %}" class="text-xs font-bold text-[#A83B19] hover:underline">
+            Voir tout &rarr;
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {% for rel in related_dishes %}
+            <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF] border border-[#E5DCD0] rounded-xl hover:shadow-md transition-shadow">
+              <a href="{{ rel.get_absolute_url }}" class="block">
+                <div class="h-40 bg-[#E5DCD0] relative overflow-hidden">
+                  {% if rel.image %}
+                    <img src="{{ rel.image }}" alt="{{ rel.name }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                  {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-[#FAF6F0]">
+                      <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-12 h-12 object-contain opacity-70">
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="p-4">
+                  <h3 class="font-serif font-bold text-sm text-[#221C18] truncate">{{ rel.name }}</h3>
+                  <p class="text-xs text-[#6B6156] mt-1 line-clamp-2">{{ rel.description }}</p>
+                </div>
+              </a>
+              <div class="px-4 py-3 border-t border-[#E5DCD0] bg-[#FAF6F0] flex items-center justify-between">
+                <span class="font-mono font-bold text-xs text-[#221C18]">{{ rel.price|fcfa }}</span>
+                <form method="POST" action="{% url 'orders:add_to_cart' rel.id %}" class="ajax-add-to-cart-form">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-ndole text-xs py-1 px-3">
+                    Ajouter
+                  </button>
+                </form>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Gestion du sélecteur de quantité (- / +)
+  const minusBtn = document.querySelector('.qty-btn-minus');
+  const plusBtn = document.querySelector('.qty-btn-plus');
+  const qtyInput = document.querySelector('.qty-input');
+
+  if (minusBtn && plusBtn && qtyInput) {
+    minusBtn.addEventListener('click', function() {
+      let val = parseInt(qtyInput.value) || 1;
+      if (val > 1) {
+        qtyInput.value = val - 1;
+      }
+    });
+
+    plusBtn.addEventListener('click', function() {
+      let val = parseInt(qtyInput.value) || 1;
+      if (val < 20) {
+        qtyInput.value = val + 1;
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

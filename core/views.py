@@ -18,12 +18,23 @@ def home(request):
     if query:
         base_dishes = base_dishes.filter(name__icontains=query)
 
+    from django.core.paginator import Paginator
+
     # Répartition des produits de la carte (avec section boissons séparée)
-    main_dishes = base_dishes.filter(product_type='plat')
+    main_dishes_qs = base_dishes.filter(product_type='plat')
+    drinks_qs = base_dishes.filter(product_type='boisson')
     starters = base_dishes.filter(product_type='entree')
-    drinks = base_dishes.filter(product_type='boisson')
     desserts = base_dishes.filter(product_type='dessert')
     featured_dishes = base_dishes.filter(is_featured=True)[:4]
+
+    # Pagination : max 6 plats et 6 boissons par page
+    dishes_paginator = Paginator(main_dishes_qs, 6)
+    page_plats = request.GET.get('page_plats', 1)
+    main_dishes = dishes_paginator.get_page(page_plats)
+
+    drinks_paginator = Paginator(drinks_qs, 6)
+    page_boissons = request.GET.get('page_boissons', 1)
+    drinks = drinks_paginator.get_page(page_boissons)
 
     # Avis vérifiés et statistiques de notation
     if restaurant:

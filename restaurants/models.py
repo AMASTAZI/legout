@@ -167,6 +167,24 @@ class Dish(models.Model):
     def categorie(self):
         return self.product_type
 
+    @property
+    def average_rating(self):
+        reviews = self.reviews.all()
+        if reviews.exists():
+            avg = reviews.aggregate(models.Avg('rating'))['rating__avg']
+            return round(avg, 1) if avg else None
+        return None
+
+    @property
+    def total_reviews_count(self):
+        return self.reviews.count()
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        if self.slug:
+            return reverse('restaurants:dish_detail', kwargs={'slug': self.slug})
+        return reverse('core:home')
+
     class Meta:
         verbose_name = "Produit / Plat"
         verbose_name_plural = "Produits & Plats"

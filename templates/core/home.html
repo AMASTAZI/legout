@@ -69,25 +69,27 @@
         <div class="border border-[#C9BBA9] rounded-lg p-3 bg-[#FFFFFF]">
           {% if featured_dishes %}
             {% with hero_dish=featured_dishes.0 %}
-              <div class="h-72 bg-[#E5DCD0] rounded overflow-hidden relative">
-                {% if hero_dish.image %}
-                  <img src="{{ hero_dish.image }}" alt="{{ hero_dish.name }}" class="w-full h-full object-cover">
-                {% else %}
-                  <div class="w-full h-full flex items-center justify-center bg-[#FAF6F0] p-6">
-                    <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-24 h-24 rounded-2xl object-contain opacity-80">
-                  </div>
-                {% endif %}
-                <span class="absolute top-3 left-3 bg-[#241E1A] text-[#FAF6F0] text-xs font-bold px-2.5 py-1 rounded">
-                  Spécialité du Chef
-                </span>
-              </div>
-              <div class="pt-3 flex items-center justify-between text-xs">
-                <div>
-                  <span class="font-serif font-bold text-sm text-[#221C18] block">{{ hero_dish.name }}</span>
-                  <span class="text-[#4A3E36]">{{ hero_dish.authentic_origin }}</span>
+              <a href="{{ hero_dish.get_absolute_url }}" class="block group">
+                <div class="h-72 bg-[#E5DCD0] rounded overflow-hidden relative">
+                  {% if hero_dish.image %}
+                    <img src="{{ hero_dish.image }}" alt="{{ hero_dish.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-[#FAF6F0] p-6">
+                      <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-24 h-24 rounded-2xl object-contain opacity-80">
+                    </div>
+                  {% endif %}
+                  <span class="absolute top-3 left-3 bg-[#241E1A] text-[#FAF6F0] text-xs font-bold px-2.5 py-1 rounded">
+                    Spécialité du Chef
+                  </span>
                 </div>
-                <span class="font-mono font-bold text-base text-[#A83B19]">{{ hero_dish.price|fcfa }}</span>
-              </div>
+                <div class="pt-3 flex items-center justify-between text-xs">
+                  <div>
+                    <span class="font-serif font-bold text-sm text-[#221C18] block group-hover:text-[#A83B19] transition-colors">{{ hero_dish.name }}</span>
+                    <span class="text-[#4A3E36]">{{ hero_dish.authentic_origin }}</span>
+                  </div>
+                  <span class="font-mono font-bold text-base text-[#A83B19]">{{ hero_dish.price|fcfa }}</span>
+                </div>
+              </a>
             {% endwith %}
           {% else %}
             <div class="w-full h-72 rounded overflow-hidden">
@@ -164,32 +166,44 @@
     <!-- Grille des Plats Principaux -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for dish in main_dishes %}
-        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF]">
-          <div>
-            <div class="h-48 bg-[#E5DCD0] relative">
+        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF] transition-all hover:shadow-md cursor-pointer group"
+          data-preview-card="true"
+          data-preview-title="{{ dish.name|escape }}"
+          data-preview-desc="{{ dish.description|truncatewords:25|escape }}"
+          data-preview-price="{{ dish.price|fcfa }}"
+          data-preview-img="{% if dish.image %}{{ dish.image }}{% else %}{% static 'images/logo.jpg' %}{% endif %}"
+          data-preview-url="{{ dish.get_absolute_url }}"
+          data-preview-rating="{{ dish.average_rating|default:'' }}"
+          data-preview-count="{{ dish.total_reviews_count|default:0 }}"
+          data-preview-badge="{{ dish.get_spice_level_display }}"
+          data-preview-badge-class="{% if dish.spice_level == 'doux' %}badge-spice-doux{% elif dish.spice_level == 'moyen' %}badge-spice-moyen{% elif dish.spice_level == 'releve' %}badge-spice-releve{% else %}badge-spice-fort{% endif %}">
+          
+          <a href="{{ dish.get_absolute_url }}" class="block">
+            <div class="h-48 bg-[#E5DCD0] relative overflow-hidden">
               {% if dish.image %}
-                <img src="{{ dish.image }}" alt="{{ dish.name }}" class="w-full h-full object-cover">
+                <img src="{{ dish.image }}" alt="{{ dish.name }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
               {% else %}
                 <div class="w-full h-full flex items-center justify-center bg-[#F4ECE1] p-4">
                   <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-16 h-16 rounded-xl object-contain opacity-75">
                 </div>
               {% endif %}
-              <span class="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded
+              <span class="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded shadow-sm
                 {% if dish.spice_level == 'doux' %}badge-spice-doux
                 {% elif dish.spice_level == 'moyen' %}badge-spice-moyen
                 {% elif dish.spice_level == 'releve' %}badge-spice-releve
                 {% else %}badge-spice-fort{% endif %}">
                 {{ dish.get_spice_level_display }}
               </span>
-              {% if dish.authentic_origin %}
-                <span class="absolute top-2 right-2 text-xs font-semibold bg-[#241E1A] text-[#FAF6F0] px-2 py-0.5 rounded">
-                  {{ dish.authentic_origin }}
+              {% if dish.average_rating %}
+                <span class="absolute top-2 right-2 text-[11px] font-bold px-2 py-0.5 rounded shadow-sm bg-[#FFFFFF]/90 text-[#221C18] flex items-center gap-1">
+                  <span class="text-[#F59E0B]">★</span>
+                  <span>{{ dish.average_rating }}</span>
                 </span>
               {% endif %}
             </div>
 
             <div class="p-5">
-              <h3 class="font-serif font-bold text-base text-[#221C18] leading-snug">
+              <h3 class="font-serif font-bold text-base text-[#221C18] leading-snug group-hover:text-[#A83B19] transition-colors">
                 {{ dish.name }}
               </h3>
               <p class="text-xs text-[#4A3E36] mt-2 line-clamp-3 leading-relaxed">
@@ -201,14 +215,18 @@
                 </div>
               {% endif %}
             </div>
-          </div>
+          </a>
 
           <div class="px-5 py-3 border-t border-[#E5DCD0] bg-[#FAF6F0] flex items-center justify-between">
             <span class="font-mono font-bold text-base text-[#221C18]">{{ dish.price|fcfa }}</span>
-            <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}">
+            <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}" class="ajax-add-to-cart-form">
               {% csrf_token %}
-              <button type="submit" class="btn-terracotta text-xs py-2 px-4">
-                Ajouter au panier
+              <input type="hidden" name="quantity" value="1">
+              <button type="submit" class="btn-terracotta text-xs py-2 px-4 shadow-sm flex items-center gap-1.5 transition-transform active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>Ajouter</span>
               </button>
             </form>
           </div>
@@ -219,6 +237,44 @@
         </div>
       {% endfor %}
     </div>
+
+    <!-- Pagination des Plats (Uniquement si > 6 plats) -->
+    {% if main_dishes.paginator.num_pages > 1 %}
+      <nav class="mt-10 flex items-center justify-center gap-2" aria-label="Pagination des plats">
+        {% if main_dishes.has_previous %}
+          <a href="?page_plats={{ main_dishes.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if request.GET.page_boissons %}&page_boissons={{ request.GET.page_boissons }}{% endif %}#menu"
+             class="px-3.5 py-2 text-xs font-bold rounded-lg border border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18] hover:bg-[#FAF6F0] hover:border-[#A83B19] transition-colors flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            <span>Précédent</span>
+          </a>
+        {% endif %}
+
+        {% for p in main_dishes.paginator.page_range %}
+          {% if p == main_dishes.number %}
+            <span class="w-9 h-9 flex items-center justify-center text-xs font-bold rounded-lg bg-[#A83B19] text-[#FFFFFF] shadow-sm">
+              {{ p }}
+            </span>
+          {% else %}
+            <a href="?page_plats={{ p }}{% if search_query %}&q={{ search_query }}{% endif %}{% if request.GET.page_boissons %}&page_boissons={{ request.GET.page_boissons }}{% endif %}#menu"
+               class="w-9 h-9 flex items-center justify-center text-xs font-bold rounded-lg border border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18] hover:bg-[#FAF6F0] hover:border-[#A83B19] transition-colors">
+              {{ p }}
+            </a>
+          {% endif %}
+        {% endfor %}
+
+        {% if main_dishes.has_next %}
+          <a href="?page_plats={{ main_dishes.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if request.GET.page_boissons %}&page_boissons={{ request.GET.page_boissons }}{% endif %}#menu"
+             class="px-3.5 py-2 text-xs font-bold rounded-lg border border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18] hover:bg-[#FAF6F0] hover:border-[#A83B19] transition-colors flex items-center gap-1">
+            <span>Suivant</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
 
   </div>
 </section>
@@ -238,23 +294,40 @@
     <!-- Grille des Boissons -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {% for drink in drinks %}
-        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FAF6F0] border-2 border-[#E5DCD0]">
-          <div>
-            <div class="h-44 bg-[#E5DCD0] relative">
+        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FAF6F0] border-2 border-[#E5DCD0] rounded-xl transition-all hover:shadow-md cursor-pointer group"
+          data-preview-card="true"
+          data-preview-title="{{ drink.name|escape }}"
+          data-preview-desc="{{ drink.description|truncatewords:20|escape }}"
+          data-preview-price="{{ drink.price|fcfa }}"
+          data-preview-img="{% if drink.image %}{{ drink.image }}{% else %}{% static 'images/logo.jpg' %}{% endif %}"
+          data-preview-url="{{ drink.get_absolute_url }}"
+          data-preview-rating="{{ drink.average_rating|default:'' }}"
+          data-preview-count="{{ drink.total_reviews_count|default:0 }}"
+          data-preview-badge="Artisanal frais"
+          data-preview-badge-class="bg-[#EBF4EE] text-[#274D36] border border-[#C1DEC8]">
+          
+          <a href="{{ drink.get_absolute_url }}" class="block">
+            <div class="h-44 bg-[#E5DCD0] relative overflow-hidden">
               {% if drink.image %}
-                <img src="{{ drink.image }}" alt="{{ drink.name }}" class="w-full h-full object-cover">
+                <img src="{{ drink.image }}" alt="{{ drink.name }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
               {% else %}
                 <div class="w-full h-full flex items-center justify-center bg-[#FAF6F0] p-4">
                   <img src="{% static 'images/logo.jpg' %}" alt="Le Gout" class="w-14 h-14 rounded-xl object-contain opacity-75">
                 </div>
               {% endif %}
-              <span class="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded bg-[#EBF4EE] text-[#274D36] border border-[#C1DEC8]">
-                Bouteille fraîche
+              <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded bg-[#EBF4EE] text-[#274D36] border border-[#C1DEC8] shadow-sm">
+                Artisanal frais
               </span>
+              {% if drink.average_rating %}
+                <span class="absolute top-2 right-2 text-[11px] font-bold px-2 py-0.5 rounded shadow-sm bg-[#FFFFFF]/90 text-[#221C18] flex items-center gap-1">
+                  <span class="text-[#F59E0B]">★</span>
+                  <span>{{ drink.average_rating }}</span>
+                </span>
+              {% endif %}
             </div>
 
             <div class="p-4">
-              <h3 class="font-serif font-bold text-sm text-[#221C18] leading-snug">
+              <h3 class="font-serif font-bold text-sm text-[#221C18] leading-snug group-hover:text-[#A83B19] transition-colors">
                 {{ drink.name }}
               </h3>
               <p class="text-xs text-[#4A3E36] mt-1.5 line-clamp-2 leading-relaxed">
@@ -266,14 +339,18 @@
                 </div>
               {% endif %}
             </div>
-          </div>
+          </a>
 
           <div class="p-4 pt-2 border-t border-[#E5DCD0] flex items-center justify-between">
             <span class="font-mono font-bold text-sm text-[#A83B19]">{{ drink.price|fcfa }}</span>
-            <form method="POST" action="{% url 'orders:add_to_cart' drink.id %}">
+            <form method="POST" action="{% url 'orders:add_to_cart' drink.id %}" class="ajax-add-to-cart-form">
               {% csrf_token %}
-              <button type="submit" class="btn-ndole text-xs py-1.5 px-3">
-                Ajouter
+              <input type="hidden" name="quantity" value="1">
+              <button type="submit" class="btn-ndole text-xs py-1.5 px-3 flex items-center gap-1 active:scale-95 transition-transform">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>Ajouter</span>
               </button>
             </form>
           </div>
@@ -284,6 +361,44 @@
         </div>
       {% endfor %}
     </div>
+
+    <!-- Pagination des Boissons (Uniquement si > 6 boissons) -->
+    {% if drinks.paginator.num_pages > 1 %}
+      <nav class="mt-10 flex items-center justify-center gap-2" aria-label="Pagination des boissons">
+        {% if drinks.has_previous %}
+          <a href="?page_boissons={{ drinks.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if request.GET.page_plats %}&page_plats={{ request.GET.page_plats }}{% endif %}#boissons"
+             class="px-3.5 py-2 text-xs font-bold rounded-lg border border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18] hover:bg-[#FAF6F0] hover:border-[#274D36] transition-colors flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            <span>Précédent</span>
+          </a>
+        {% endif %}
+
+        {% for p in drinks.paginator.page_range %}
+          {% if p == drinks.number %}
+            <span class="w-9 h-9 flex items-center justify-center text-xs font-bold rounded-lg bg-[#274D36] text-[#FFFFFF] shadow-sm">
+              {{ p }}
+            </span>
+          {% else %}
+            <a href="?page_boissons={{ p }}{% if search_query %}&q={{ search_query }}{% endif %}{% if request.GET.page_plats %}&page_plats={{ request.GET.page_plats }}{% endif %}#boissons"
+               class="w-9 h-9 flex items-center justify-center text-xs font-bold rounded-lg border border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18] hover:bg-[#FAF6F0] hover:border-[#274D36] transition-colors">
+              {{ p }}
+            </a>
+          {% endif %}
+        {% endfor %}
+
+        {% if drinks.has_next %}
+          <a href="?page_boissons={{ drinks.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if request.GET.page_plats %}&page_plats={{ request.GET.page_plats }}{% endif %}#boissons"
+             class="px-3.5 py-2 text-xs font-bold rounded-lg border border-[#C9BBA9] bg-[#FFFFFF] text-[#221C18] hover:bg-[#FAF6F0] hover:border-[#274D36] transition-colors flex items-center gap-1">
+            <span>Suivant</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
 
   </div>
 </section>
@@ -301,34 +416,56 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {% for dish in starters %}
-        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF]">
-          <div class="p-4">
+        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF] rounded-xl border border-[#E5DCD0] transition-all hover:shadow-md cursor-pointer group"
+          data-preview-card="true"
+          data-preview-title="{{ dish.name|escape }}"
+          data-preview-desc="{{ dish.description|truncatewords:20|escape }}"
+          data-preview-price="{{ dish.price|fcfa }}"
+          data-preview-img="{% if dish.image %}{{ dish.image }}{% else %}{% static 'images/logo.jpg' %}{% endif %}"
+          data-preview-url="{{ dish.get_absolute_url }}"
+          data-preview-rating="{{ dish.average_rating|default:'' }}"
+          data-preview-count="{{ dish.total_reviews_count|default:0 }}"
+          data-preview-badge="Entrée"
+          data-preview-badge-class="bg-[#FDF0EB] text-[#A83B19] border border-[#F4C4B4]">
+          <a href="{{ dish.get_absolute_url }}" class="block p-4">
             <span class="text-xs font-bold uppercase tracking-wider text-[#A83B19]">Entrée</span>
-            <h3 class="font-serif font-bold text-sm text-[#221C18] mt-1">{{ dish.name }}</h3>
+            <h3 class="font-serif font-bold text-sm text-[#221C18] mt-1 group-hover:text-[#A83B19] transition-colors">{{ dish.name }}</h3>
             <p class="text-xs text-[#4A3E36] mt-1 line-clamp-2">{{ dish.description }}</p>
-          </div>
+          </a>
           <div class="p-4 pt-2 border-t border-[#E5DCD0] flex items-center justify-between">
             <span class="font-mono font-bold text-xs text-[#221C18]">{{ dish.price|fcfa }}</span>
-            <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}">
+            <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}" class="ajax-add-to-cart-form">
               {% csrf_token %}
-              <button type="submit" class="btn-terracotta text-xs py-1 px-2.5">Ajouter</button>
+              <input type="hidden" name="quantity" value="1">
+              <button type="submit" class="btn-terracotta text-xs py-1 px-2.5 active:scale-95 transition-transform">Ajouter</button>
             </form>
           </div>
         </article>
       {% endfor %}
 
       {% for dish in desserts %}
-        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF]">
-          <div class="p-4">
+        <article class="resto-card overflow-hidden flex flex-col justify-between bg-[#FFFFFF] rounded-xl border border-[#E5DCD0] transition-all hover:shadow-md cursor-pointer group"
+          data-preview-card="true"
+          data-preview-title="{{ dish.name|escape }}"
+          data-preview-desc="{{ dish.description|truncatewords:20|escape }}"
+          data-preview-price="{{ dish.price|fcfa }}"
+          data-preview-img="{% if dish.image %}{{ dish.image }}{% else %}{% static 'images/logo.jpg' %}{% endif %}"
+          data-preview-url="{{ dish.get_absolute_url }}"
+          data-preview-rating="{{ dish.average_rating|default:'' }}"
+          data-preview-count="{{ dish.total_reviews_count|default:0 }}"
+          data-preview-badge="Dessert"
+          data-preview-badge-class="bg-[#FAF0D7] text-[#9A6208] border border-[#E9CD8A]">
+          <a href="{{ dish.get_absolute_url }}" class="block p-4">
             <span class="text-xs font-bold uppercase tracking-wider text-[#C27A23]">Dessert</span>
-            <h3 class="font-serif font-bold text-sm text-[#221C18] mt-1">{{ dish.name }}</h3>
+            <h3 class="font-serif font-bold text-sm text-[#221C18] mt-1 group-hover:text-[#A83B19] transition-colors">{{ dish.name }}</h3>
             <p class="text-xs text-[#4A3E36] mt-1 line-clamp-2">{{ dish.description }}</p>
-          </div>
+          </a>
           <div class="p-4 pt-2 border-t border-[#E5DCD0] flex items-center justify-between">
             <span class="font-mono font-bold text-xs text-[#221C18]">{{ dish.price|fcfa }}</span>
-            <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}">
+            <form method="POST" action="{% url 'orders:add_to_cart' dish.id %}" class="ajax-add-to-cart-form">
               {% csrf_token %}
-              <button type="submit" class="btn-terracotta text-xs py-1 px-2.5">Ajouter</button>
+              <input type="hidden" name="quantity" value="1">
+              <button type="submit" class="btn-terracotta text-xs py-1 px-2.5 active:scale-95 transition-transform">Ajouter</button>
             </form>
           </div>
         </article>

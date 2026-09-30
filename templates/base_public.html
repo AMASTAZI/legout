@@ -86,16 +86,14 @@
           {% endif %}
 
           <!-- Bouton Panier -->
-          <a href="{% url 'orders:cart' %}" class="relative p-2 text-[#221C18] hover:text-[#A83B19] border border-[#E5DCD0] rounded-md bg-[#FAF6F0] flex items-center gap-2">
+          <a href="{% url 'orders:cart' %}" id="nav-cart-btn" class="relative p-2 text-[#221C18] hover:text-[#A83B19] border border-[#E5DCD0] rounded-md bg-[#FAF6F0] flex items-center gap-2" aria-label="Mon Panier">
             <svg class="w-5 h-5 text-[#221C18]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
             </svg>
-            <span class="text-xs font-bold font-mono">{{ cart_subtotal|default:0|fcfa }}</span>
-            {% if cart_item_count > 0 %}
-              <span class="absolute -top-2 -right-2 bg-[#A83B19] text-[#FFFFFF] text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border border-[#FFFFFF]">
-                {{ cart_item_count }}
-              </span>
-            {% endif %}
+            <span id="nav-cart-subtotal" class="text-xs font-bold font-mono">{{ cart_subtotal|default:0|fcfa }}</span>
+            <span id="nav-cart-badge" class="{% if not cart_item_count or cart_item_count == 0 %}hidden{% endif %} absolute -top-2 -right-2 bg-[#A83B19] text-[#FFFFFF] text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border border-[#FFFFFF] transition-all transform duration-200">
+              {{ cart_item_count|default:0 }}
+            </span>
           </a>
 
           <!-- Menu Utilisateur / Connexion -->
@@ -343,6 +341,35 @@
     </div>
   </div>
 
+  <!-- Popover d'Aperçu au Survol des Cartes -->
+  <div id="card-preview-popover" 
+       class="fixed pointer-events-none opacity-0 invisible transition-all duration-200 ease-out z-50 bg-[#FFFFFF] border border-[#E5DCD0] rounded-xl shadow-2xl w-72 p-3 text-left"
+       style="max-width: 90vw;"
+       role="tooltip"
+       aria-hidden="true">
+    <div class="relative w-full h-36 rounded-lg overflow-hidden bg-[#FAF6F0] mb-2.5">
+      <img id="popover-img" src="" alt="" class="w-full h-full object-cover">
+      <span id="popover-badge" class="hidden absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm"></span>
+    </div>
+    <div class="flex items-start justify-between gap-1">
+      <h4 id="popover-title" class="font-serif font-bold text-sm text-[#221C18] line-clamp-1 leading-snug"></h4>
+    </div>
+    <div id="popover-rating" class="flex items-center gap-1.5 mt-1 text-xs"></div>
+    <p id="popover-desc" class="text-xs text-[#4A3E36] mt-1.5 line-clamp-2 leading-relaxed"></p>
+    <div class="mt-2.5 pt-2 border-t border-[#E5DCD0] flex items-center justify-between">
+      <span id="popover-price" class="font-mono font-bold text-sm text-[#A83B19]"></span>
+      <a id="popover-link" href="#" class="text-[11px] font-bold text-[#A83B19] hover:underline flex items-center gap-1">
+        <span>Fiche complète</span>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Conteneur Flottant des Notifications Toast -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none" aria-live="polite"></div>
+
   <script>
   function toggleChatbotModal(forceState) {
     const modal = document.getElementById('chatbot-modal');
@@ -504,6 +531,249 @@
       pwdInput.dataset.hasToggle = 'true';
     });
   });
+
+  // Système Global de Notification Toast
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold transform transition-all duration-300 translate-y-3 opacity-0 max-w-sm ' + 
+      (type === 'error' ? 'bg-[#FDF0EB] border-[#F4C4B4] text-[#8B1B1B]' : 'bg-[#EBF4EE] border-[#C1DEC8] text-[#274D36]');
+
+    const iconSvg = type === 'error'
+      ? '<svg class="w-4 h-4 shrink-0 text-[#8B1B1B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+      : '<svg class="w-4 h-4 shrink-0 text-[#2E7D32]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+
+    toast.innerHTML = iconSvg + '<span class="flex-1">' + message + '</span>';
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.classList.remove('translate-y-3', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+    });
+
+    setTimeout(() => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-3', 'opacity-0');
+      setTimeout(() => toast.remove(), 300);
+    }, 3500);
+  }
+
+  // Interception universelle de l'ajout au panier sans rechargement (AJAX)
+  document.addEventListener('submit', function(e) {
+    const form = e.target.closest('.ajax-add-to-cart-form') || 
+                 (e.target.action && e.target.action.includes('/commandes/ajouter/') ? e.target : null);
+    if (!form) return;
+
+    e.preventDefault();
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      if (submitBtn.disabled) return;
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+    }
+
+    const formData = new FormData(form);
+    const actionUrl = form.action;
+
+    fetch(actionUrl, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Erreur de requête');
+      return res.json();
+    })
+    .then(data => {
+      if (data.success) {
+        // Mise à jour badge
+        const badge = document.getElementById('nav-cart-badge');
+        if (badge) {
+          badge.textContent = data.cart_count;
+          if (data.cart_count > 0) {
+            badge.classList.remove('hidden');
+            badge.classList.add('scale-125');
+            setTimeout(() => badge.classList.remove('scale-125'), 200);
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+
+        // Mise à jour sous-total
+        const subtotalEl = document.getElementById('nav-cart-subtotal');
+        if (subtotalEl && data.cart_subtotal_formatted) {
+          subtotalEl.textContent = data.cart_subtotal_formatted;
+        }
+
+        showToast(data.message || 'Produit ajouté au panier !', 'success');
+      } else {
+        showToast(data.message || 'Impossible d\'ajouter au panier', 'error');
+      }
+    })
+    .catch(err => {
+      console.error('Erreur AJAX add-to-cart:', err);
+      // Fallback
+      form.submit();
+    })
+    .finally(() => {
+      if (submitBtn) {
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+        }, 350);
+      }
+    });
+  });
+
+  // Gestionnaire Popover d'Aperçu au Survol des Cartes
+  (function() {
+    const popover = document.getElementById('card-preview-popover');
+    if (!popover) return;
+
+    const pImg = document.getElementById('popover-img');
+    const pBadge = document.getElementById('popover-badge');
+    const pTitle = document.getElementById('popover-title');
+    const pRating = document.getElementById('popover-rating');
+    const pDesc = document.getElementById('popover-desc');
+    const pPrice = document.getElementById('popover-price');
+    const pLink = document.getElementById('popover-link');
+
+    let hideTimeout = null;
+    let activeCard = null;
+
+    function cancelHide() {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
+    }
+
+    function scheduleHide() {
+      cancelHide();
+      hideTimeout = setTimeout(() => {
+        popover.classList.remove('opacity-100', 'visible', 'pointer-events-auto');
+        popover.classList.add('opacity-0', 'invisible', 'pointer-events-none');
+        popover.setAttribute('aria-hidden', 'true');
+        activeCard = null;
+      }, 150);
+    }
+
+    popover.addEventListener('mouseenter', cancelHide);
+    popover.addEventListener('mouseleave', scheduleHide);
+
+    function positionPopover(card) {
+      const rect = card.getBoundingClientRect();
+      const popWidth = 288;
+      const popHeight = popover.offsetHeight || 260;
+      const padding = 12;
+
+      let left, top;
+
+      if (rect.right + popWidth + padding <= window.innerWidth) {
+        left = rect.right + padding;
+      } else if (rect.left - popWidth - padding >= 0) {
+        left = rect.left - popWidth - padding;
+      } else {
+        left = Math.max(padding, Math.min(window.innerWidth - popWidth - padding, rect.left + (rect.width - popWidth) / 2));
+      }
+
+      top = rect.top;
+      if (top + popHeight > window.innerHeight - padding) {
+        top = window.innerHeight - popHeight - padding;
+      }
+      if (top < padding) {
+        top = padding;
+      }
+
+      popover.style.left = Math.round(left) + 'px';
+      popover.style.top = Math.round(top) + 'px';
+    }
+
+    function showForCard(card) {
+      cancelHide();
+      activeCard = card;
+
+      const title = card.getAttribute('data-preview-title') || '';
+      const desc = card.getAttribute('data-preview-desc') || '';
+      const price = card.getAttribute('data-preview-price') || '';
+      const img = card.getAttribute('data-preview-img') || '';
+      const url = card.getAttribute('data-preview-url') || '#';
+      const rating = card.getAttribute('data-preview-rating');
+      const reviewsCount = parseInt(card.getAttribute('data-preview-count') || '0');
+      const badge = card.getAttribute('data-preview-badge');
+      const badgeClass = card.getAttribute('data-preview-badge-class');
+
+      if (pImg) {
+        pImg.src = img;
+        pImg.alt = title;
+      }
+      if (pTitle) pTitle.textContent = title;
+      if (pDesc) pDesc.textContent = desc;
+      if (pPrice) pPrice.textContent = price;
+      if (pLink) pLink.href = url;
+
+      if (pBadge) {
+        if (badge) {
+          pBadge.textContent = badge;
+          pBadge.className = 'absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm ' + (badgeClass || 'bg-white text-[#221C18]');
+          pBadge.classList.remove('hidden');
+        } else {
+          pBadge.classList.add('hidden');
+        }
+      }
+
+      if (pRating) {
+        if (rating && parseFloat(rating) > 0) {
+          const rVal = parseFloat(rating);
+          let starsHtml = '<div class="flex text-[#F59E0B]">';
+          for (let i = 1; i <= 5; i++) {
+            starsHtml += `<svg class="w-3.5 h-3.5 ${i <= Math.round(rVal) ? 'fill-current' : 'text-[#D1D5DB] fill-current'}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>`;
+          }
+          starsHtml += `</div><span class="font-bold text-[#221C18] text-[11px]">${rVal.toFixed(1)}/5</span><span class="text-[10px] text-[#6B6156]">(${reviewsCount} avis)</span>`;
+          pRating.innerHTML = starsHtml;
+        } else {
+          pRating.innerHTML = '<span class="text-[#F59E0B] text-xs font-bold">★</span><span class="text-[11px] text-[#6B6156]">Nouveau • Pas encore noté</span>';
+        }
+      }
+
+      positionPopover(card);
+      popover.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
+      popover.classList.add('opacity-100', 'visible', 'pointer-events-auto');
+      popover.setAttribute('aria-hidden', 'false');
+    }
+
+    document.addEventListener('mouseover', function(e) {
+      const card = e.target.closest('[data-preview-card="true"]');
+      if (card) {
+        showForCard(card);
+      }
+    });
+
+    document.addEventListener('mouseout', function(e) {
+      const card = e.target.closest('[data-preview-card="true"]');
+      if (card) {
+        scheduleHide();
+      }
+    });
+
+    window.addEventListener('scroll', function() {
+      if (activeCard && !popover.classList.contains('invisible')) {
+        positionPopover(activeCard);
+      }
+    }, { passive: true });
+
+    window.addEventListener('resize', function() {
+      if (activeCard && !popover.classList.contains('invisible')) {
+        positionPopover(activeCard);
+      }
+    }, { passive: true });
+  })();
   </script>
 
   {% block extra_js %}{% endblock %}

@@ -86,14 +86,27 @@ def add_to_cart(request, dish_id):
 
     messages.success(request, f"{qty}x {dish.name} ajouté(s) à votre panier !")
     
+    # Calcul du total et de la quantité globale pour mise à jour dynamique sans rechargement
+    dish_ids = [int(k) for k in cart.keys() if k.isdigit()]
+    dishes = Dish.objects.filter(id__in=dish_ids)
+    dishes_dict = {d.id: d for d in dishes}
+    cart_subtotal = sum(dishes_dict[int(k)].price * item.get('quantity', 1) for k, item in cart.items() if k.isdigit() and int(k) in dishes_dict)
+    cart_count = sum(item.get('quantity', 1) for k, item in cart.items() if isinstance(item, dict))
+
     # Si requête AJAX
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
         return JsonResponse({
             'success': True,
-            'cart_count': sum(item['quantity'] for item in cart.values() if isinstance(item, dict)),
-            'message': f"{dish.name} ajouté !"
+            'cart_count': cart_count,
+            'cart_subtotal': cart_subtotal,
+            'cart_subtotal_formatted': f"{cart_subtotal:,}".replace(',', ' ') + " FCFA",
+            'dish_name': dish.name,
+            'message': f"{dish.name} ajouté au panier !"
         })
 
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
     return redirect('orders:cart')
 
 
