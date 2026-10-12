@@ -1,0 +1,33 @@
+# Fichiers Python compilés
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Environnements virtuels
+venv/
+.venv/
+env/
+ENV/
+
+# Base de données locale de test
+*.sqlite3
+db.sqlite3
+
+# Fichiers d'environnement et secrets
+.env
+.env.*
+!.env.example
+
+# Fichiers statiques générés pour la production
+staticfiles/
+
+# Fichiers médias téléversés en local
+media/
+
+# Fichiers IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
