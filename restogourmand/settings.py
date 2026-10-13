@@ -20,7 +20,8 @@ SECRET_KEY = os.environ.get(
 )
 
 # Sécurité : DEBUG désactivé par défaut en production, activable en local
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+"""DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')"""
+DEBUG = False  # Désactivé par défaut pour la production, à activer en local si nécessaire
 
 # Hôtes autorisés
 allowed_hosts_env = os.environ.get('ALLOWED_HOSTS')
