@@ -1,4 +1,6 @@
+import os
 from django.core.management.base import BaseCommand
+from django.contrib.auth import get_user_model
 from restaurants.models import Restaurant, Category, Dish
 
 class Command(BaseCommand):
@@ -93,3 +95,18 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS("Plats et boissons initiaux crees avec succes."))
 
+        # 4. Creer le superadministrateur par defaut s'il n'existe pas encore
+        User = get_user_model()
+        if not User.objects.filter(is_superuser=True).exists():
+            admin_username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
+            admin_email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@legout.cm')
+            admin_password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'Admin1234!')
+            User.objects.create_superuser(
+                username=admin_username,
+                email=admin_email,
+                password=admin_password,
+                role='admin'
+            )
+            self.stdout.write(self.style.SUCCESS(f"Superutilisateur '{admin_username}' cree avec succes."))
+        else:
+            self.stdout.write("Un compte superutilisateur existe deja.")
